@@ -373,3 +373,140 @@ alter table prices drop constraint price_descount_check
 select * from prices
 
 
+=========================SEQUENCE I POSTGRESQL=============================================
+
+--sequence.........
+--create seq
+
+create sequence my_seq
+
+--get seq val
+select nextval('my_seq')
+
+--get currentvalue of seq
+select currval('my_seq')
+
+--set seq value
+--select setval(name,value)
+
+select setval('my_seq',100)
+
+--create a seq with start value
+-- create sequence name start with value.
+create sequence if 	not exists  test_seq2 start with 100
+
+select nextval('test_seq2')
+
+--alter sequence...........
+--alter sequence and restart with 50 instead of 100
+
+alter sequence test_seq2 restart with 50
+
+--rename sequence 
+alter sequence test_seq2 rename to my_sequence
+
+--Use Multiple sequence parameter to create a sequence
+--create sequence name  
+--start with
+--increment value
+--minvalue value
+--maxvalue value
+
+create sequence if not exists prabhakar_seq
+increment 50
+minvalue 400
+maxvalue 6000
+start with 500
+
+select nextval('prabhakar_seq')
+
+--specify the data type of sequence like(int bigint smallint)
+--default is bigint
+
+--create sequence if not exists seq_name as data_type
+create sequence if not exists smallint_seq as smallint
+
+create sequence if not exists int_seq as int 
+
+select nextval('smallint_seq')
+
+select nextval('int_seq')
+
+--create a descending sequence and cycle / no cycle
+create sequence desc_seq 
+increment-1
+minvalue 1
+maxvalue 3
+start 3
+cycle;
+
+select nextval('desc_seq')
+
+--Delete/Drop Sequence...........
+--drop sequence seq_name.......
+drop sequence my_seq
+
+--Attache sequence to the table column
+--To attach a sequence to an existing table
+--1st create a sequence
+
+create table users(
+user_id serial primary key,
+username varchar(50)
+)
+
+insert into users(username) values('prabhakar810')
+
+select * from users
+
+--chnage the start value of seq
+alter sequence users_user_id_seq restart with 100
+
+
+--create another table
+create table users2(
+user_id int primary key,
+username varchar(40)
+)
+
+--create sequence name
+--start with value owned by tablename.columnnane
+
+create sequence users2_user_id_seq start with 100 owned by users2.user_id
+
+--attache this seq to users2 table
+alter table users2 alter column user_id set default  nextval('users2_user_id_seq')
+
+insert into users2(username) values('Rohit Klumar')
+
+select * from users2
+
+--List all the sequence in the database
+select relname sequence_name
+from pg_class
+where relkind ='S'
+
+--share same sequence with among all tables..
+create sequence common_fruits_seq start with 100
+
+--now create table and share with table
+
+create table apples(
+app_id int default nextval('common_fruits_seq') not null,
+app_name varchar(40)
+)
+
+insert into apples(app_name) values('Japani')
+
+select * from apples
+
+
+create table mango(
+mango_id int default nextval('common_fruits_seq') not null,
+man_name varchar(50)
+)
+
+insert into mango(man_name) values('Small Mango')
+
+select * from mango
+

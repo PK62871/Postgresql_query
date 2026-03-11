@@ -510,3 +510,78 @@ insert into mango(man_name) values('Small Mango')
 
 select * from mango
 
+
+--create Alpha Numeric sequence......
+--by default sequence consist of numeric
+
+create sequence table_seq
+
+create table constacts(
+contact_id text not null default('ID' || nextval('table_seq')),
+contact_name varchar(40)
+);
+
+select * from constacts
+
+insert into constacts(contact_name) values ('Amit Kumar')
+
+
+=============================STring Functin============================================================
+
+--String Function......
+
+-- UPPER(To Convert a String into upper case)
+--LOWER(To Convert a String into lower case)
+--INITCAP(Convert a String into proper case or title 1st word of each character is in upper and remaning in lower)
+
+select upper('prabhakar kumar') as name;
+select lower('PRABHAKAR KUMAR') as name;
+select initcap('PRAbhakar KUMar') as name;
+
+
+select
+initcap(
+concat(first_name,' ',last_name)
+) as full_name from employees
+order by first_name
+
+select * from employees
+
+--LEFT RIGHT Function
+--left function return the first n character from the string left(string,n)
+
+select left('Prabhakar',2)
+
+-- if the n is in  -ve then it will return all character except last -n 
+--means give me evrything except the -n
+
+select left('Kumar',-3)
+
+select left(first_name,3),
+left(last_name,4) from employees
+
+select 
+left(first_name,1) as initial,
+count(*) as total_initial
+from employees
+group by 1
+order by 1
+
+--right function it will give me the last n character
+
+select right('ABCD',2)
+
+select right('ABCDE',-2)
+
+-- find employees where last name end with ab, or whatever
+select * from employees
+
+select * from employees where right(first_name,2)='et'
+
+--Reverse function-----------------
+--it is use to reverse a string into reverse order..........
+
+select reverse('ABCDE')
+
+select reverse(first_name),reverse(last_name) from employees
+

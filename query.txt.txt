@@ -585,3 +585,150 @@ select reverse('ABCDE')
 
 select reverse(first_name),reverse(last_name) from employees
 
+
+select * from employees
+
+--Split_part() function it split the string on specified delimiter and return the nth substring............
+--split_part(String,delimiter,position)
+
+select split_part('1,2,3',',',2)
+
+select split_part('One,Two,Three,Four',',',3)
+
+select split_part('1|2|3|4|5','|',4)
+
+
+--in this birth_date is date type so converted date to text type 
+select first_name,last_name ,birth_date,
+split_part(birth_date::text,'-',1) as birth_date
+from employees;
+
+select split_part(birth_date::text,'-',1) from employees
+
+
+--TRIM,BRIM,LTRIM and RTRIM Function
+--#########################################
+
+/*
+
+TRIM :- remove the longest string that contains a specific chracter from a string
+
+LTRIM :- remove all chractters, spaces by default from the begining of string
+
+RTRIM :- remove all chracters, spaces by default from the end of Strting
+
+BRIM :-  this is combination of LTRIM and RTRIM function
+
+
+*/
+
+TRIM(LEADING FROM String)
+TRIM(TRAILING FROM String)
+TRIM(BOTH FROM String)
+
+LTRIM(String ,[Character])
+RTRIM(String,[Chracter])
+BTRIM(String,[Chracter])
+
+
+select 
+trim(leading from '  Prabhakar'),
+trim(trailing from 'Prabhakar  '),
+trim('  Kumar  ')
+
+
+--remoive leading 0 from number
+
+select
+trim(leading '0'
+from cast(00012345 as text)
+)
+
+--remove trailing 0
+
+select 
+trim(trailing '0'
+from cast(12345600000 as text)
+)
+
+
+--remove y from start
+select 
+ltrim('yummy','p')
+
+--remove y from last
+select 
+rtrim('yummy','y')
+
+--remove the y from left and right
+select
+btrim('yummy','y')
+
+
+--ltrim rtrim btrim also remove spaces leading trailing.......
+
+select
+ltrim('  Prabhakar')
+
+select
+rtrim('Prabhakar  ')
+
+select btrim(first_name,last_name) from employees
+
+select btrim('  Prabhakar  ')
+
+
+--LPAD and RPAD Function
+#################################
+
+--LPAD : pads a string on the left to a specified length with a sequence of character
+--RPAD :- pads a string on the right to a specified length with sequence of character
+
+--LPAD(String,length,fill)
+--RPAD(String,length,fill)
+
+select lpad('Prabhakar',10,'#')
+select rpad('Kumar',10,'#')
+
+select lpad(first_name,10,'*') from employees 
+
+
+--LENGTH - return the number of chracter or number of bytes  of a string
+Lenght(String)
+
+select length('Prabhakar')
+
+select length(cast(1234567890 as text))
+
+select length('What is the Lenght of String')
+
+select char_length(' ')
+
+select char_length('Prabhakar')
+
+select char_length(null)
+
+
+--get the length of first and lastname
+
+select length(first_name) from employees order by 1 desc
+
+select
+first_name || ' ' || last_name as "Full Name",
+length(first_name || ' ' || last_name) as length_name
+
+from employees
+order by 2 desc
+
+--Postion Function
+-- it will return the location of the substring from the actual string
+--position(substring IN String)
+--return the integer representation the location of the substring from the string
+-- it will return the 1st occurances
+--search for the substring is case-insensitive
+
+select position('is'IN 'this is good')
+select position('o' IN 'this is not good')
+
+
+

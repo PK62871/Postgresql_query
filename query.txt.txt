@@ -731,4 +731,665 @@ select position('is'IN 'this is good')
 select position('o' IN 'this is not good')
 
 
+--SUBSTRING FUNCTION--------------
+-- it allow to extract a substring from given string
+--syntax  :- substring(String,FROM start_position, FOR length)
+
+Select substring('What is my name'from 1 for 4)
+
+select substring('Prabhakar Kumar Singh' from 2 for 5) 
+
+select first_name,last_name,
+substring(first_name, 1 ,1) as "FIRST NAME INITIAL",
+substring(last_name,1,1) as "LAST NAME INITIAL"
+from employees order by last_name
+
+
+--REPEAT FUNCTION----------------
+--repeat a string to specified number of times
+
+select repeat('Prabhakar',3)
+
+select repeat(first_name,2) from employees
+
+--REPLACE FUNCTION-------------
+--it is used to replaces all occurancres of a specified string 
+
+--replace(String , from_String , to_String)
+
+select replace('ABC XYZ','X','1')
+
+select replace('My Name is Prabhakar Kumar Singh','Prabhakar Kumar Singh','Rohit Kumar Singh Patna')
+
+select replace('I lIke cats','cats','dogs')
+
+select replace('2233445566221122','2','9')
+
+
+
+--Agreegate Function--------
+
+--Count :- it is used to count
+--count result using count
+
+--select count(*) from table_name
+--select count(column_name) from table_name
+
+select * from employees
+
+select count(*) from employees
+
+select count(first_name) from employees
+
+select distinct count(*) from employees
+
+--Count with distinct value............
+--select  count(*)/count(distinct (column_name)) from table_name
+
+--count how many employeess from USA
+
+select count(*) from employees 
+where country = 'USA'
+
+
+
+select count(country) from employees 
+
+select  count(distinct(country)) from employees
+
+select distinct(country) from employees
+
+
+
+--Agreegate Function--------
+
+--Count :- it is used to count
+--count result using count
+
+--select count(*) from table_name
+--select count(column_name) from table_name
+
+select * from employees
+
+select count(*) from employees
+
+select count(first_name) from employees
+
+
+--Count with distinct value............
+--select  count(*)/count(distinct (column_name)) from table_name
+
+--count how many employeess from USA
+
+select count(*) from employees 
+where country = 'USA'
+
+
+
+select count(country) from employees 
+
+select  count(distinct(country)) from employees
+
+select distinct(country) from employees
+
+
+
+COUNT(), COUNT(*) and COUNT(1)
+Use either COUNT(field) or COUNT(*), and stick with it consistently
+
+
+
+Use count(*) for counting
+
+=====================
+
+For counting rows we could have this:
+
+
+
+SELECT COUNT(emp) FROM emp
+
+
+
+Counting with null
+
+================
+
+It is not a good practice to make a field nullable if its name matches the table name. Say you have values 'Banana', 'Apple', NULL, 'Pears' on fruit field. This will not count all rows, it will only yield 3, not 4
+
+
+
+SELECT count(fruit) FROM fruit
+
+
+
+count(1): The one-trick pony
+
+=======================
+
+In particular to COUNT(1), it is a one-trick pony, it works well only on one table query:
+
+
+
+SELECT COUNT(1) FROM tbl
+
+But when you use joins, that trick won't work on multi-table queries without its semantics being confused, and in particular you cannot write:
+
+
+
+-- count the subordinates that belongs to boss
+
+SELECT boss.boss_id, COUNT(subordinate.1)
+
+FROM boss
+
+LEFT JOIN subordinate on subordinate.boss_id = boss.boss_id
+
+GROUP BY boss.id
+
+
+
+Summary
+
+========
+
+COUNT(*) counts the number of rows
+
+COUNT(1) also counts the number of rows
+
+
+--SUM Function -- it it Used to sumation/sum
+
+--select sum(column_name) from table_name
+--it will wrk on int,bigint,smallint,numeric, data type if type is string cast it then 
+
+select * from employees
+
+select sum(extension::int) from employees
+
+select sum(extension::int) from employees
+where extension > '500'
+
+
+--Sum with distinct
+--sum(distinct expression)
+
+select 
+sum(distinct extension::int) from employees
+
+
+--MIN and MAX Function---------
+--MIN :- Minimum and MAX :- Maximum
+
+--select min(column_name) from table_name
+--Select max(column_name) from table_name
+
+select min(extension::int) from employees
+
+select max(extension::int) from employees
+
+select max(employee_id) from employees
+
+select min(birth_date) from employees
+
+--get min max DOB for USA employees
+
+select 
+min(birth_date) from employees where country = 'USA'
+
+select * from employees  where country ='USA' order by birth_date asc
+
+select
+max(birth_date) from employees where country = 'UK'
+
+select * from employees where country ='UK' order by birth_date desc
+
+
+--GREATEST and LEAST Function---------
+
+--GREATEST :- It will return getrest number from lists....
+--Greatest(list)
+
+--LEAST :- it will return the least value from the lists 
+--Least(lists)
+
+select greatest(10,20,30,40,50)
+
+select least(10,20,30,40,-50)
+
+--for string value
+select least('A','B','C','D')
+
+select greatest('A','B','C','D')
+
+--The Lists should be same data type nt of mixing int string
+
+select * from employees
+
+select
+dometic_revenue,
+international_revenue
+Greatest(dometic_revenue,international_revenue) as "Greatest Revenue",
+Least(dometic_revenue,international_revenue) as "Least Revenue"
+ from movie_revenues
+
+
+GREATEST vs. MAX()
+At first glance, the MySQL MAX() and GREATEST() functions perform a similar operation. They both return the maximum value from a range of values. However, there’s a difference between these two functions.
+
+
+The best way to see the difference between these two functions is to compare their syntax.
+
+
+
+Syntax
+
+The syntax for each function goes like this:
+
+
+
+MAX([DISTINCT] expr) [over_clause]
+
+GREATEST(value1,value2,...)
+
+
+So already, they look completely different. The MAX() function accepts the DISTINCT keyword as well as an OVER clause (and the GREATEST() function doesn’t).
+
+
+
+However, the key difference between these two functions is in the accepted argument/s. Specifically:
+
+
+
+- MAX() accepts one argument
+
+- GREATEST() accepts multiple arguments
+
+
+So MAX() is typically used to return the maximum value in a column in a database. The table could contain many rows, but this function returns the one with the maximum value.
+
+
+
+GREATEST() on the other hand, returns the maximum-valued argument from the list of arguments passed to it. So you could pass say, 3 arguments to this function and it will return the one with the largest value.
+
+
+MAX() Function
+=============
+
+SELECT MAX(Population) AS 'Result'
+
+FROM City;
+
+
+
++----------+
+
+| Result   |
+
++----------+
+
+| 10500000 |
+
++----------+
+
+
+
+GREATEST() function
+
+=====================
+
+The GREATEST  function returns the “greatest” or “largest” value from the list of expressions.
+
+
+
+GREATEST ( value_1, [value_n] )
+
+
+
+SELECT GREATEST(1, 5, 9) AS 'Result';
+
+
+
++--------+
+
+| Result |
+
++--------+
+
+|      9 |
+
++--------+
+
+
+
+If you try to pass a single argument to the GREATEST() function you’ll get an error.
+
+
+select * from order_details
+
+
+--Avg function to get average of input..
+--select avg(column_name) from table_name
+-- avg always return result in numeric type.....
+
+--get avg proice
+select avg(unit_price) as avgr from order_details
+
+--get avg for english based movie......
+
+select avg(movie_lenght) from movies where movie_lan = 'English'
+
+
+--Agv with distinct or of ditinct no.
+
+select distinct unit_price from order_details
+
+select avg ( distinct unit_price) from order_details
+
+
+--find av and sum of unit_price from order details
+
+select 
+avg(unit_price),
+sum(unit_price)
+from order_details
+--here where clause we can use
+
+--NOTE :- Avg always igonore null value and it always caculate result on non-null value
+
+
+--Combining column using mathematical operator......
+--ADDITION :-
+--SUBTRACTION :-
+--MULTIPLICATION :-
+--DIVISION :-
+--MODULUS/REMINDER :-
+
+select 2 + 10 as Addition
+select 2-10 as substraction
+select 2.10 * 10.50 as multiplication
+select 10/2 as division
+select 2 % 10 as modulus
+
+-- Add two column
+
+select  order_id,
+unit_price,quantity,
+(unit_price + quantity) as total
+from order_details  -- condition base addition  where order_id = 10248
+order by 4 desc
+
+
+
+--DATE/TIME/TIMESTAMP  DATA TYPES..........
+
+/*
+
+1. Date :-   Date Only       YYYY-MM-DD
+
+it store year month and date value of a date in that order
+Year value is 4 digits in long month and date value in 2 digits in long
+the lenght of the date is ten positions
+
+2. TIME :-       TIME ONLY         HH:MM:SS
+
+Time with time zone
+
+
+3. TIMESTAMP :- Date and time only     YYYY::MM:DD HH:MM:SS
+
+it sto0res bot date and time 
+*/
+
+
+--System Month Date setting
+--to view current setting for date style
+
+show datestyle
+
+--formates is MDY Month Date year
+--DMY Date Year  month
+--YMD Year Month date
+
+--we can chnage the datestyle format
+
+set datestyle ='ISO,MDY';
+
+show dateStyle
+
+--Converting String to Date Formates
+--to_date is function to do this conversion
+
+--To_Date(date,formate)
+
+--String to YYYY-MM-DD formate iso formate
+
+select
+TO_DATE('2020-02-09','YYYY-MM-DD')
+
+select 
+to_date('20200101','YYYY-MM-DD')
+
+select 
+to_date('20200101','YYYYMMDD')
+
+
+--String to DD-MM-YYYY
+
+select
+to_date('01-01-2026','DD-MM-YYYY')
+
+--When input String is not in formates
+
+select
+to_date('2020-01-01','DD-MM-YYYY')
+
+--String to YYYY-MM-DD to long formates
+
+select
+to_date('December 1,2020','Month DD,YYYY')
+
+--String to YYYY-MM-DD from shorth Date
+
+select
+to_date('Dec 1,2020','YYYY-MM-DD')
+
+Select
+to_Date('Dec 1,2020','Mon DD,YYYY')
+
+
+--To convert string to a timestamp based on specific formate
+
+--to_timestamp(timestamp,format)
+
+--timestamp formate is :- YYYY-MM-DD HH:MM:SS
+
+
+--skip SS
+select to_timestamp('2020-01-01 10:30:20','YYYY-MM-DD HH:MI')
+
+--skip MIn
+select to_timestamp('2020-01-01 10:30:20','YYYY-MM-DD HH')
+
+
+
+
+
+
+--Grouping By :- to grup data record based on cndition
+--Group By divide the rows return by select into groups
+--Group by eliminate/skip the duplicate result similar to distinct 
+--for each group we can apply aggreegate funvtion like sum,min,max,avg etc..
+
+/*
+
+select column1,
+aggreegate_function(column2)
+from table_name
+group by column1    
+*/
+
+--get total count of all movie
+
+select movie_lang,count(movie_lang)
+from movies group by movie_lang
+
+--Get Avg of all movie length group by movie length......
+
+select  movie_length,
+avg(movie_length) from movies group by movie_length
+
+--get avg of movie_length on movie_lang group by
+
+select movie_lang, 
+avg(movie_length) from movies group by movie_lang
+
+--count movie based on language
+ select count(movie_lang) from movies where movie_lang='English' 
+
+
+ --get total sum movie_lenght per age certification...............
+ select * from movies
+
+ select age_certificate,
+ sum(movie_length) from movies  group by age_certificate
+
+
+--List min and max movie length  group by movie lang...
+
+select
+movie_lang,
+min(movie_length),
+max(movie_length)
+from movies
+group by movie_lang
+
+
+--Can we do group by without aggreegate function..............
+
+select 
+movie_length
+from movies group by movie_length order by movie_length
+
+select movie_length from movies
+
+ --Using more than 1 column in select
+ --get avg movie length group by movie lang and age certificate
+
+ select movie_lang,age_certificate,
+ avg(movie_length) from movies group by movie_lang,age_certificate order by 1,3 
+ --1,3 is column we can mentiona column_name or number of column in select statement
+
+
+ --Filter then find avg
+ --get avg movie length by movie lang and age-certificate where movie length greter than 100;
+
+ select 
+ movie_lang,age_certificate,
+ avg(movie_length) from movies where movie_length > 100 
+ group by movie_lang,age_certificate 
+ order by 1
+
+ --Get avg movie length group by movie age certificate where age is = 10;
+
+ select
+ age_certificate,
+ avg(movie_length)
+ from movies
+ where age_certificate = '10'
+ group by age_certificate
+
+--How many directors are from each nationality
+
+ select * from directors
+
+ select nationality, count(*)
+ from directors group by nationality  order by 1 ,2 
+
+ --get Total sum of movie length for each age certificate and movie lang combination
+
+ select 
+ age_certificate,
+ movie_lang,
+ sum(movie_length) from movies  group by age_certificate,movie_lang order by 3 desc 
+
+ 
+
+
+
+ --ORDER OF EXECUTION in GROUP BY
+
+ /*
+Postgres evaluates the group by clause after the FROM and WHERE clause and before
+HAVING SELECT DISTINCT ORDER BY and LIMIT clauses............
+*/
+
+/*
+
+FROM 
+WHERE  -- Condition
+GROUP BY  --Group sets
+HAVING  -- again filter
+SELECT   --column
+DISTINCT -- unique column if will use distinct
+ORDER BY  -- order asc or desc
+LIMIT  -- to filter record
+*/
+
+--USING HAVING CLAUSE.....
+
+/*
+We use HAVING CLAUSE to specify a search condition for a group or an aggregate 
+The Having clause is often used with Group by clause to filter rows based on filter conditions
+We cannot use column name as alias in having clause as having clause execute before select clause
+having clause calculates on aggregate function and not actual select columns..
+*/
+
+/*
+
+Select
+column1,
+aggregate_Function(Column2)
+from table_name
+group by column1
+Having condition;
+*/
+
+
+/*
+
+HAVING AGGREGATE_FUNCTION(column1) = value
+HAVING AGGREGATE_FUMCTION(Column2) >= value
+*/
+
+-- List movies language where sum total length of the movies is greter than 200
+
+select 
+movie_lang,
+sum(movie_length) from movies 
+group by movie_lang
+Having sum(movie_length) > 200
+order by sum(movie_length) desc
+
+
+--List Directors where their sum of total movie_length is greter than 200
+
+select * from movies
+
+select
+director_id,
+sum(movie_length)
+from movies
+group by director_id
+having sum(movie_length) > 200
+
+/*
+
+Postgres evaluate the HAVING clause after the from where group by and after the select distinct , order by , limit
+*/
+
+ 
+
+
+
 

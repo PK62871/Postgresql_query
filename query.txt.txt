@@ -1390,6 +1390,157 @@ Postgres evaluate the HAVING clause after the from where group by and after the 
 
  
 
+--HAVING VS WHERE Clauses
+
+--Having Works on results groups
+--WHERE Works On select column not on group results
+
+--Get the movies lang where their total sum of movie length is greter than 200
+
+select * from movies
+select movie_lang from movies where sum(movie_length) > 200 
+
+select movie_lang,
+sum(movie_length)
+from movies
+group by movie_lang
+having sum(movie_length) > 200
+
+
+--Handling null values with group by 
+
+create table employees_test(
+employee_id serial primary key,
+employee_name varchar(100),
+department varchar(50),
+salary Int
+)
+
+select * from employees_test
+
+--Insert Data
+
+insert into employees_test(employee_name,department,salary) values
+('Jhon','Finance',2500),
+('Marry',null,3000),
+('Adam',null,4000),
+('Bruce','Finance',4000),
+('Linda','IT',5000),
+('Megan','IT',4000)
+
+--display all dept
+
+select employee_name,salary, department from employees_test
+order by 1
+
+--how many employees in each dept
+
+select department,
+count(*) as total_employees
+from employees_test
+group by department
+order by department
+
+--Handle the null value if deprt is null,
+-- for that will use function
+--coalesce(source,' ')
+--coalesce(department,'No Department')
+
+select coalesce(department,'Without Department'),
+count(*) as total_employees
+from employees_test
+group by department
+order by 1
 
 
 
+
+********************************************** JOINS  **********************************************************************
+
+--POSTGRESQL JOIN
+
+--INNER JOINS
+
+-- Postgres Join is used to combine/attach column from one or more table based on the values of the
+--common columns between tables.......
+
+-- These COMMON COLUMNS are generally
+-- Primary key column of first table and foreign key columns of the second table 
+
+/*
+
+select * from table_a
+join table_b
+on table_a.key_column = table_b.forign_key_column
+
+select
+table1.column1,
+table2.column2
+from table1
+inner join table2 on table1.column1 = table2.column2
+
+*/
+
+--For Inner Joins :- All common columns defined at ON must match values on both tables
+
+--1 Combine movies and directors tables...........
+
+select * from movies
+
+select * from directors
+
+select
+	movies.movie_id,
+	movies.movie_name,
+	movies.director_id,
+	
+	directors.first_name,
+	directors.last_name
+from movies
+inner join directors
+on movies.director_id = directors.director_id
+
+--Using alias of table_name
+
+select
+ m.movie_id,
+upper( m.movie_name),
+ m.director_id,
+
+upper( d.first_name),
+ d.last_name
+
+from movies as m
+inner join directors as d
+on m.director_id = d.director_id
+
+
+--Join and filter based on english movie_lang
+
+select
+ m.director_id,
+ m.movie_name,
+ m.movie_lang,
+
+ d.first_name,
+ d.last_name
+
+from movies as m
+inner join  directors as d
+on m.director_id = d.director_id
+where m.movie_lang = 'English'
+
+-- filter from directors also
+and  d.director_id = 3
+
+
+--combine and get all column from both table instead of selecting column
+
+select
+ m.*,
+
+ d.*
+
+from movies as m
+inner join directors as d
+on m.director_id = d.director_id

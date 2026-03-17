@@ -1544,3 +1544,150 @@ select
 from movies as m
 inner join directors as d
 on m.director_id = d.director_id
+
+
+
+-- INNER JOIN WITH USING
+
+--We can use USING only when joining tables have the same COLUMN Names rather than ON
+
+--Lets say COLUMN1 is the same column Name
+
+/*
+
+select
+table1.column1
+table2.column1
+from table1
+INNER JOIN table2 USING (Column1)
+*/
+
+--1.Connect movies and directors table with USING Keyword
+
+select
+ m.*,
+ d.*
+from movies as m
+INNER JOIN directors as d using (director_id)
+
+
+--2 Connect movies and movies_revenues table
+
+select * from movies
+inner join movies_revenues using(movie_id)
+
+--3 Connect more than 2 tables
+-- cnnect movies directors and movies_revenues
+
+--find common column in the table 
+-- In Movies & Directors :- movies.director_id  and directors.director_id
+-- In Movies & Movies_revenues :- movies.movie_id and movies_revenues.movie_id
+
+Select * from movies
+INNER JOIN directors using(director_id)
+Inner Join movies_revenues Using(movie_id)
+
+
+--another query without using 
+-- Find limited info about movies directors and movies_revenues
+
+select
+	m.movie_name,
+	m.movie_length,
+	m.movie_lang,
+	m.release_date,
+
+	d.first_name,
+	d.last_name,
+	d.nationality,
+
+	mr.revenues_domestic,
+	mr.revenues_international
+	
+from movies as m
+INNER JOIN directors as d
+ON m.director_id = d.director_id
+INNER JOIN movies_revenues as mr
+on m.movie_id = mr.movie_id
+
+
+--INNER JOIN WITH FILTER.....DATA
+
+--1 fetch movie_name , movie_lang director_name , and domestic revenues for all 'Japanese movies'
+
+select
+	m.movie_name,
+	m.movie_lang,
+	d.first_name,
+	d.last_name,
+	mr.revenues_domestic
+
+from movies  m
+INNER JOIN directors as d
+ON m.director_id = d.director_id
+INNER JOIN movies_revenues  mr
+ON m.movie_id = mr.movie_id
+
+where m.movie_lang = 'Japanese'
+order by revenues_domestic
+
+
+--2. get movie_name , directors name , for all English Chines ,Japanese  where doemstic revenues is greter than 100;
+
+select
+	m.movie_name,
+	m.movie_lang,
+	d.first_name,
+	d.last_name,
+	mr.revenues_domestic
+from movies m
+INNER JOIN directors d ON m.director_id = d.director_id
+INNER JOIN movies_revenues as mr ON m.movie_id = mr.movie_id
+--Filter condition
+where m.movie_lang in('English','Chinese','Japanese')
+and mr.revenues_domestic > 100
+order by 5 desc
+
+
+--3 Select movie_name , director_name , movie_lang , total revenue for all and find top 5 movies
+
+select 
+
+	m.movie_name,
+	m.movie_lang,
+	
+	d.first_name,
+	d.last_name,
+
+	mr.revenues_domestic,
+	mr.revenues_international,
+--total revenues 
+	(revenues_domestic + revenues_international) as total_revenues
+from movies m
+INNER JOIN directors d ON m.director_id = d.director_id
+INNER JOIN movies_revenues mr ON m.movie_id = mr.movie_id
+order by 7 desc  nulls last limit 5
+
+
+--Find top 10 profitable movies between 2005 to 2008 
+--and fetch movie_name director_name movie_lang total revenues and release date
+
+
+select 
+	m.movie_name,
+	m.movie_lang,
+	m.release_date,
+	
+	d.first_name,
+	d.last_name,
+	
+	mr.revenues_domestic,
+	mr.revenues_international,
+	--total
+	(revenues_domestic + revenues_international) as total_revenues
+from movies m
+INNER JOIN directors d ON m.director_id = d.director_id
+INNER JOIN movies_revenues mr ON m.movie_id = mr.movie_id
+
+where m.release_date between '2005-01-01' and '2008-12-31'
+order by 8 desc nulls last limit 10

@@ -1691,3 +1691,219 @@ INNER JOIN movies_revenues mr ON m.movie_id = mr.movie_id
 
 where m.release_date between '2005-01-01' and '2008-12-31'
 order by 8 desc nulls last limit 10
+
+
+
+
+
+
+--How to use INNER JOIN tables With different column data type
+
+--1 create table with int data type
+create table int_type(
+test INT
+)
+
+--2 create table with varchar data type
+create table varchar_tble(
+test varchar(10)
+)
+
+--3 Can we Join this ?
+
+select * from int_type
+INNER JOIN varchar_tble on int_type.test = varchar_tble.test
+
+--4 If we have to join 2 tables with different data type then we have to CAST the type
+
+--char to int
+select * from int_type
+INNER JOIN varchar_tble on int_type.test = cast (varchar_tble.test as int)
+
+--int to char
+select * from int_type
+INNER JOIN varchar_tble on cast(int_type.test as varchar) = varchar_tble.test
+
+
+--Insert data and check
+insert into int_type(test) values (1),(2),(3)
+
+insert into varchar_tble(test) values (1),(2),(3)
+
+select * from int_type
+
+
+-----------******** LEFT JOIN******--------------------
+
+/*
+
+1. It will Return every rows from the left table Plus rows that match values in the joined column from the right table
+2. When the left table row dosen't have a match in the right table, the result show no values from the right table
+
+SYNTAX
+
+SELECT
+ table1.column1,
+ table2.column2
+FROM table1
+LEFT JOIN table2 ON table1.column1 = table2.column2
+
+*/
+
+--Create table for excercise
+--left_products and right_products
+
+create table left_products(
+product_id serial primary key,
+product_name varchar(100)
+)
+
+create table right_products(
+product_id serial primary key,
+product_name varchar(100)
+)
+
+--add data into left_product
+insert into left_products(product_id,product_name)
+values(1,'Computers'),
+(2,'Laptop'),
+(3,'Monitor'),
+(5,'Mics')
+
+select * from left_products
+
+select * from right_products
+--insert data into right_product
+insert into right_products(product_id,product_name)
+values(1,'Computers'),
+(2,'Laptop'),
+(3,'Monitor'),
+(4,'Pen'),
+(7,'Papers')
+
+
+--Join these 2 table with LEFT JOIN
+--common column between both r product_id
+
+select
+* from left_products
+left join right_products on left_products.product_id = right_products.product_id
+
+
+-- Using movies tables for JOINS
+--List All The movies with directors first and lastName and movies name
+
+--NOTE :- From table_name actually means whole data from this table.... means this will be left table.
+
+--In This Whole data from Directors and matches record from movies and for thos which will not match that will
+--result in null
+select 
+d.first_name,
+d.last_name,
+m.movie_name
+
+from directors d
+LEFT JOIN movies m
+ON m.director_id = d.director_id
+order by 1 nulls last
+
+--2nd query
+
+select
+d.first_name,
+d.last_name,
+m.movie_name
+
+from movies m --whole from movie means left
+left join directors d -- common from this which will match from movies
+ON d.director_id = m.director_id
+order by 1 
+
+
+--add 1 record into directors
+insert into directors(first_name,last_name,date_of_birth,nationality) values
+('james','David','2010-01-01','American')
+
+select * from directors
+
+--For LEFT Join First table matter a lot
+
+--Can we add where condition get list of english and chinese movies only
+
+select
+	d.first_name,
+	d.last_name,
+	m.movie_name,
+	m.movie_lang
+
+from directors  d
+LEFT JOIN movies m ON m.director_id = d.director_id
+
+where m.movie_lang in('English','Chinese')
+
+
+--Count all movies for each directors
+
+
+select
+d.first_name,
+d.last_name,
+count(*)
+from directors as d
+left join movies as m
+ON m.director_id = d.director_id 
+group by d.first_name,d.last_name
+order by count(*) desc
+
+
+select
+d.first_name,
+d.last_name,
+count(*)
+from movies m
+left join directors d
+on d.director_id = m.director_id
+group by d.first_name,d.last_name
+order by count(*) desc
+
+
+
+--Get all movies with age_certification for all direcrtors where nationalituy is american chinese and japanese
+
+select 
+d.first_name,
+d.last_name,
+d.nationality,
+m.movie_name,
+m.age_certificate
+from directors d
+left join movies m on m.director_id = d.director_id
+where nationality in('American','Chinese','Japanese')
+
+
+--Get all the total revenues done by each movies for each directors
+--1st table directors 
+
+select
+d.first_name,
+d.last_name,
+
+sum(revenues_international + revenues_domestic) as "total_revenues"
+from directors d
+Left Join movies m ON m.director_id = d.director_id
+Left join movies_revenues as mr ON mr.movie_id = m.movie_id 
+group by d.first_name,d.last_name
+having sum(revenues_international + revenues_domestic) > 0
+order by 3 desc nulls last
+
+
+
+
+
+
+
+
+
+
+
+

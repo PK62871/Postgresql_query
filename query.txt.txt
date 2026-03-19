@@ -1901,7 +1901,183 @@ order by 3 desc nulls last
 
 
 
+----RIGHT JOIN------------------
+--########################################
 
+/*
+
+1. Return every rows from right table plus rows that match in the join column from the left table
+2. When the right table rows doesn't match in the left table , the result will be null from the left table
+
+SELECT
+table1.column1,
+table2.column2
+from table1
+RIGHT JOIN ON table2 table1.column1 = table2.column2
+
+NOTE :- It returns all the data from the table2 and only matching data from the table2
+
+-- It is opposite to LEFT JOIN
+
+*/
+
+--Example :- Join the left products and right_products
+
+SELECT
+* from  left_products as l
+RIGHT JOIN right_products as r ON r.product_id = l.product_id
+
+select * from movies
+
+--Use right Join
+--1. List all the movies with directors first and last name and movie name,
+
+SELECT
+d.first_name,
+d.last_name,
+m.movie_name
+from directors as d
+RIGHT JOIN movies as m ON m.director_id = d.director_id
+
+-- it will return all data from movies bcz movies is right table
+
+--2 reverse the table for above query
+
+SELECT
+d.first_name,
+d.last_name,
+m.movie_name
+from movies m
+RIGHT JOIN directors d ON d.director_id = m.director_id
+
+-- it will return all data from directors bcz directors is right table
+
+--2 get List of english and chinese movies only
+
+select 
+
+d.first_name,
+d.last_name,
+m.movie_name,
+m.movie_lang
+
+from movies m
+RIGHT JOIN  directors d ON d.director_id = m.director_id
+where m.movie_lang in ('English','Chinese')
+order by d.first_name
+
+
+--3 Count all movie for each directors.......
+
+select
+d.first_name,
+d.last_name,
+count(*) as "total_movie"
+from directors d
+right join movies m on m.director_id = d.director_id
+group by d.first_name,d.last_name
+order by count(*) desc
+
+
+--4 get all the total revenue done by each movies for each directors
+
+select
+d.first_name,
+d.last_name,
+sum(r.revenues_domestic + r.revenues_international) as "total_revenue"
+
+from directors as d
+ 
+Right Join movies as m on m.director_id = d.director_id
+right join movies_revenues as r on r.movie_id = m.movie_id
+group by d.first_name , d.last_name
+having sum(r.revenues_domestic + r.revenues_international) > 100
+
+
+
+-------FULL JOIN--------------
+#############################################
+
+/*
+
+Returns every rows from all the joins tables
+
+SAMPLE :-
+
+SELECT
+table1.column1,
+table2.column2
+from table1
+FULL JOIN table2 ON table2.column2 = table1.column1
+
+Return all data from table1 and table2
+*/
+
+--1 Join left_products and right_products via full Join
+
+select
+* from left_products as l
+full join right_products r ON l.product_id = r.product_id
+
+
+--2 List all movies with directors first last name and movie name
+
+select 
+d.first_name,
+d.last_name,
+m.movie_name
+from directors d 
+full join movies m on m.director_id = d.director_id
+where m.movie_lang in('English','Chinsese','Japanese')
+--there will be no impact when will reverse table
+
+
+--Joining multiple table via JOIN 
+--########################################
+
+--We can Join multiple table Via Join
+
+/*
+
+select 
+table1.column1,
+table2.column2,
+table3.column3'
+from table1
+JOIN table2 ON table1.column1 = table2.column2
+JOIN table3 ON table3.column3 = table2.column2
+*/
+
+
+--1. Join movies directors and movies_revenues together
+
+select
+* from movies m
+JOIN directors d ON d.director_id = m.director_id
+JOIN movies_revenues r ON r.movie_id = m.movie_id
+
+--NOTE :- ORder of table doesn't matter will get same data even will chnage from table or join table order
+
+--2 Join movies_actors directors and movies_revenues
+
+select * from actors ac
+JOIN movies_actors ma ON ma.actor_id = ac.actor_id
+JOIN movies mv ON mv.movie_id = ac.actor_id
+JOIN directors d ON d.director_id = mv.director_id
+JOIN movies_revenues mr ON mr.movie_id = mv.movie_id
+
+
+--Check JOIN and INNER JOIN r same
+###########################################
+
+select * from actors ac
+INNER JOIN movies_actors ma ON ma.actor_id = ac.actor_id
+INNER JOIN movies mv ON mv.movie_id = ac.actor_id
+INNER JOIN directors d ON d.director_id = mv.director_id
+INNER JOIN movies_revenues mr ON mr.movie_id = mv.movie_id
+
+--NOTE :- INNER JOIN = JOIN
+--INNER JOIN is the default if we don't specify the type when we use the word JOIN....
 
 
 

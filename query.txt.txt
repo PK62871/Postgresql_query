@@ -2082,4 +2082,112 @@ INNER JOIN movies_revenues mr ON mr.movie_id = mv.movie_id
 
 
 
+---------SELF JOIN---------------------
+--###############################################
+
+/*
+
+SELF -JOIN allows to cpmapare rows within the same table
+
+Normal Use Case :-
+Query hirararichal data or to compare rows withing same table
+
+SYNTAX :-
+
+SELECT 
+column_list
+from tablename t1
+INNER JOIN tablename t2 ON t1.column = t2.column
+
+*/
+
+
+--1. SELF JOIN on left_products
+
+SELECT
+* from left_products as p1
+INNER JOIN left_products p2 ON p1.product_id = p2.product_id
+
+
+--2. self join on directors table
+
+select * from directors d1
+INNER JOIN directors d2 ON d1.director_id = d2.director_id
+
+
+--3. find all pairs of movies that have the same movie length
+
+select 
+m1.movie_name,
+m2.movie_name,
+m1.movie_length
+from  movies m1
+INNER JOIN movies m2 ON m1.movie_length = m2.movie_length
+
+
+--4. Query hirarchial data like all directors and movies
+
+select
+m1.movie_name,
+m2.director_id
+from movies m1 
+INNER JOIN movies m2 ON m1.director_id = m2.movie_id
+order by director_id 
+
+
+
+-------CROSS JOIN---------------
+#############################################
+
+/*
+
+1. IN a cross join query the result(also known as Cartesian product) lines of each rows in left tables
+with each rows in the right table to present all possible combination of rows
+
+2. Suppose we r performing CROSS JOIN ON 2 tables table1 and table2
+If table1 has m rows and table2 has n rows the result set will have (m * n) rows
+
+EXAMPLE :- table1 has 1000 rows table2 has 1000 rows the result will be (1000 * 1000 = 1000000 rows).
+
+UNLIKE :- INNER JOIN, LEFT JOIN, RIGHT JOIN, CROSS JOIN does not have a join predicate..........
+
+NOTE :- No need to mentioned ON Syntax.......
+
+SYNTAX :--- way of cross join
+
+select column_list
+from table1
+CROSS JOIN table2
+
+or
+
+Select * from left_prodcutts , right_products
+
+or
+
+select * from left_products
+INNER JOIN right_products on true
+*/
+
+
+--1. CROSS JOIN left_products and right_products.........
+
+select * from left_products
+cross join right_products
+
+select * from left_products , right_products
+
+select * from left_products
+cross join right_products ON true;
+
+
+
+------NATURAL JOIN-------------------
+################################################
+
+/*
+
+A natural join 
+
+*/
 

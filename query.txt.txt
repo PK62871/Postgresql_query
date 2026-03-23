@@ -2191,3 +2191,195 @@ A natural join
 
 */
 
+
+------NATURAL JOIN---------------
+
+/*
+Natural Join is a join that create implicit join based on the same column name in the joined tables.
+A natural join can be a INNEER JOIN, LEFT JOIN, RIGHT JOIN.
+IF We Don't define any join explicitly then postgresql will use INNER JOIN...By Default
+
+Based on Column column between both tables it will perform and it will join by itself...
+
+SYNTAX :--
+
+Select
+column_list,
+FROM table1
+NATURAL [INNER,LEFT, RIGHT] JOIN table2
+
+*/
+
+--1 natural Join ON left_products and right_products
+
+SELECT * from left_products
+NATURAL JOIN right_products  --Here we didn't specified any join like INNER,LEFT,RIGHT by default will be INNER JOINM
+
+--NATURAL LEFT JOIN
+SELECT * from left_products
+NATURAL LEFT JOIN right_products
+
+
+--NATURAL RIGHT JOIN
+SELECT * from left_products
+NATURAL RIGHT JOIN right_products
+
+
+--All the common columns , which are the columns from the both table that have the same column name.
+--Every column from the both tables Which is not a common columns 
+
+--These both can do the same things
+
+select * from left_products
+INNER JOIN right_products using(product_id)
+
+
+select * from left_products
+NATURAL INNER JOIN right_products
+
+
+--3 natural join movies and directors tables...........
+
+select 
+* from movies
+NATURAL INNER JOIN directors
+
+
+select * from directors
+NATURAL LEFT JOIN movies
+
+
+--APPEND TABLE WITH DIFFERENT TABLES----------------
+
+/*
+
+We have :-
+
+--** table1 with columns :- add_date col1,col2,col3
+--** table2 with columns :- add_date col1,col2,col3,col4,col5
+
+we want to combine the two tables but make sure to take the data from the 1st table table1 
+*/
+
+
+--CREATE table1
+
+create table table1(
+add_date Date,
+col1 int,
+col2 int,
+col3 int
+)
+
+--Insert 
+
+Insert into table1(add_date,col1,col2,col3) values
+('2020-01-01',1,2,3),
+('2020-01-02',4,5,6);
+
+
+--create table2
+
+create table table2(
+add_date Date,
+col1 int,
+col2 int,
+col3 int,
+col4 int,
+col5 int
+)
+
+--INSERT
+
+Insert into table2(add_date,col1,col2,col3,col4,col5) values
+('2020-01-01',null,7,8,9,10),
+('2020-01-02',11,12,13,14,15),
+('2020-01-03',16,17,18,19,20);
+
+select * from table1
+
+select * from table2
+
+
+
+--Combining Queries together with UNION
+--#################################################
+
+/*
+
+The UNION Operator combine result sets from two or more select statement into a single result set
+
+To be able to use UNION :-
+ 	The order or the number in the select list of all query must be same
+	 the data type must be compatible too
+
+
+SYNTAX :-
+
+select column1, column2
+from table1
+UNION
+select column1 column2 from table2
+
+*/
+
+--1. union on left_products and right_products
+--Union will nt return duplicate record.......... if we want duplicate use UNION ALL
+select
+product_id,product_name
+from left_products
+UNION
+select product_id,product_name
+from right_products
+
+
+--Get Duplicate Record By UNION ALL.............
+
+select
+product_id,product_name
+from left_products
+UNION ALL
+select product_id,product_name
+from right_products
+
+--combine directors and actors
+
+select
+first_name,
+last_name
+from directors
+UNION
+select
+first_name,
+last_name
+from actors
+
+--Order by with union
+
+select
+first_name,
+last_name,
+'directors' as "directors"
+from directors
+UNION
+select
+first_name,
+last_name,
+'actors' as "actors"
+from actors
+order by first_name
+
+
+--Combine all directors where ationallyty r American Chinese Japanese with all femels actors
+
+select
+first_name,
+last_name
+from directors where nationality in('American','Chinese','Japanese')
+UNION
+select 
+first_name,
+last_name
+from actors
+where gender = 'F'
+order by first_name asc

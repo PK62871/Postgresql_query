@@ -1733,7 +1733,10 @@ insert into varchar_tble(test) values (1),(2),(3)
 select * from int_type
 
 
+
+
 -----------******** LEFT JOIN******--------------------
+#################################################################
 
 /*
 
@@ -2182,17 +2185,9 @@ cross join right_products ON true;
 
 
 
-------NATURAL JOIN-------------------
-################################################
 
-/*
-
-A natural join 
-
-*/
-
-
-------NATURAL JOIN---------------
+------NATURAL JOIN---------------------------
+#############################################
 
 /*
 Natural Join is a join that create implicit join based on the same column name in the joined tables.
@@ -2302,8 +2297,8 @@ select * from table2
 
 
 
---Combining Queries together with UNION
---#################################################
+--Combining Queries together with UNION , INTERSECT , EXCEPT
+--##############################################################
 
 /*
 
@@ -2383,3 +2378,196 @@ last_name
 from actors
 where gender = 'F'
 order by first_name asc
+
+
+
+-----UNION tables with different number of column-----
+/*
+
+We have :- 
+
+Table1 with colm1, colm2
+Table2 with colm1 
+
+
+How to combine as the column r diffrent in table2
+*/
+
+--Create 2 table with diffn no. of column
+
+create table table22(
+
+col3 int
+)
+
+--Union rule for combining 2 table is each table with the same no. of column
+--So here colmn r diff no so  Will use UNION WITH NULL will keep null as column_name
+
+select col1,col2 from table11
+UNION
+select  NULL as col1 , col3 from table22
+
+ drop table table22
+
+
+ --Combining query together with INTERSECT...........
+ ######################################################################
+
+ /*
+
+The Intersection operator returns any rows that are available or common between in BOTH tables results sets..
+
+ To Be able to use intersection :-
+ The order and number of the columns in the select list of all queries must be the same....
+ The data type must be compatible too......
+
+ SYNTAX ::-
+
+ Select
+ column1, column2
+ from table1
+ INTERSECT
+ select column1, column2 from table2...........
+ 
+
+ */
+
+--1... Use INTERSECT On left_products and right_products......
+
+select * from left_products
+INTERSECT
+select * from right_products
+
+--INTERSECT will never return duplicate like UNION,,,,,,
+
+--2...Intersect first_name last_name from actors and directors........
+
+select
+first_name,
+last_name
+from directors
+Intersect
+select
+first_name,
+last_name
+from actors
+
+
+--Combining queries together with EXCEPT............
+##############################################################
+
+/*
+
+The EXCEPT operator to return the rows in the first query that do not repeat in the output of the second query
+
+  To Be able to use except :---
+    --The order and number of columns in the select lists of all queries must be the same..
+	--The data types must be compatible too........
+
+SYNTAX :----
+
+SELECT
+column1,column2
+from table1
+EXCEPT
+select column1,column2 from table2
+
+*/
+
+--1....Use EXCEPT On left_products and right_products
+
+select * from left_products
+EXCEPT
+select * from right_products
+
+
+--2.....Except with first_name last_name of directors and actors.tables..........
+
+select first_name, last_name
+from directors
+EXCEPT
+select first_name, last_name from actors
+
+
+
+
+
+
+-----------Using SCHEMA--------------------
+################################################
+
+/*
+
+SCHEMA :--
+  Schema is a namespace that contains named database objects such as.........
+
+	  tables,
+	  views,
+	  indexes,
+	  data type/types,
+	  functions,
+	  store procedures and 
+	  operators
+
+--Each PostgreSQL Schema should be unique and different from each other..ex. we cannot create same name schema in same database
+
+--Benifits of schemas :-
+Schema allows to organize database objects table into more logical groups to make them more manageable.
+schema allow users to use one database without interfering with each other..
+it allow us to organize and limit database objects access to users....
+Postgresql automatically creates a schema called public for evry newly created databse.....
+A database can contains one or multiple schemas and each schema belongs to only one database ............
+Two Schema can have different objects that share the same name...............
+
+*/
+
+
+--Schema operations(ADD/ALTER/DELETE)
+###########################################
+
+--1...Create a Schema
+
+--CREATE SCHEMA Schema_name
+
+CREATE SCHEMA sales
+
+CREATE SCHEMA hr
+
+--2. Rename Schema
+
+--Alter Schema old_schema_name rename to new_Schema_name
+
+Alter schema hr rename to hrgroup
+
+--3.. Drop Schema
+
+--DROP SCHEMA Schema_name
+
+DROP SCHEMA hr;
+
+DROP SCHEMA hrgroup;
+
+
+
+--SCHEMA hierarchy-----------
+##########################################
+
+/*
+
+Physical :- host > cluster database > schema > object name
+
+Objects access :- database.schema.objects_name
+               ex :- hr.public.employee
+
+			   select * from hr.public.employee (hr is database public is default schema employee is table)
+
+*/
+
+--Move atable to new Schema-------------
+#################################################
+
+--Alter table table_name set schema schema_name
+
+Alter table order.orders set schema public
+
+

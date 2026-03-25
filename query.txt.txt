@@ -2563,11 +2563,95 @@ Objects access :- database.schema.objects_name
 
 */
 
---Move atable to new Schema-------------
+--Move a table to new Schema-------------
 #################################################
 
 --Alter table table_name set schema schema_name
 
 Alter table order.orders set schema public
+
+
+---Schema Search path-----------------
+#######################################################
+
+/*
+
+Normally We will refer to a table without its schema name orders table instead of a fully qualified name such as 
+public.orders table
+
+Example :- select * from orders              --Non-fully qualified schema path
+           Select * from all_orders.orders    -- Fully Qualified schema path
+
+		   
+When we reference a table using its name only not fully qualified name postgresql searches for the table by using the 
+Schema search path..
+
+Schema Search Path is a list of schemas that is used to look for objects
+*/
+
+
+--1..View The current Schema ??
+
+Select current_schema();
+
+--2.. View the current search path
+
+show search_path
+
+
+--3.. How to add new schema inot search path
+
+--set search_path to schema_name , public
+
+set search_path to all_orders , public
+
+-- If we not set search path then we have to give always fully qualified table name while select
+--After set the search path we can execute without fully qualified name
+
+
+
+--Schema OWNERSHIP-------------
+###########################################
+
+--1.Alter ownership of schema
+
+--Alter schema schema_name owner to new_owner
+
+
+
+-----DUPLICATE a SCHEMA WITH all Data-----------------
+################################################################
+
+--create sample database
+
+Create database test_schema
+
+--Create sample table
+
+create table test_schema.public.songs(
+
+song_id serial primary key,
+song_title varchar(100)
+)
+
+--Insert Data
+insert into test_schema.public.songs(song_title) values
+('Counting Star'),
+('Rolling On')
+
+select * from songs
+
+--Now duplicate the schema "public" with all data
+
+--The first Steps s to make a dump of our Postgresql database public schema using "pg_dump"
+
+--Syntax to take dump :--
+ -- pg_dump -d database_name -h localhost -U postgres -n public > dump.sql
+ 
+  pg_dump -d database_name -h localhost -U postgres(username) -n public > dump.sql
+
+pg_dump -d test_schema -h localhost -U postgres -n public > dump.sql
+
+
 
 

@@ -2655,3 +2655,315 @@ pg_dump -d test_schema -h localhost -U postgres -n public > dump.sql
 
 
 
+
+---Json / JsonB Data type-----------
+###########################################
+
+--Create table With JsonB
+
+create table books(
+
+book_id serial primary key,
+book_info jsonb
+)
+
+select * from books
+
+--Insert Json Data
+
+insert into books(book_info) values
+('{"title":"Book Title2","author":"Author2"}'),
+('{"title":"Book Title3","author":"Author3"}')
+
+--select all json record
+select * from books
+
+--Using Selectors (-> and ->>)
+--1.. ->  this operator will return the JSON Objects field as a field in quotes
+
+--Get all json column data...
+
+select book_info from  books
+
+--Get a particular field of json data
+
+select book_info -> 'title'  from books  -- This value will result in double quotes by using ->
+
+--2.. ->> this will return  the field value as in text not in double quotes
+
+select book_info ->> 'author' from books
+
+--we can get multiple field at time from json object
+
+select book_info ->> 'author',book_info ->>'title' from books
+
+
+--Filtering json data by Where clause
+
+select 
+ book_info ->>'title' as "title",
+ book_info ->>'author' as "author"
+
+from books where book_info ->> 'author' = 'Author2'
+
+
+--Update Json Record into table...........
+##############################################
+
+--Lets insert some data
+
+insert into  books(book_info) values
+('{"title":"Title10","author":"author10"}')
+
+select * from books
+
+--Update the record 
+
+--For update we have to use || concatenation
+ -- || it will add new field as well as it will update 
+
+update books
+set book_info = book_info || '{"title":"Hacks Of Money"}'
+
+where book_info ->> 'title' = 'Title10'
+returning * --return all aftected rows
+
+
+
+
+
+
+--Add new json field in existing record
+
+update books
+set book_info = book_info || '{"best Seller":true}'
+
+where book_info ->> 'author' = 'Prabhakar'
+returning *
+
+
+
+--Add Multiple values
+
+update books
+set book_info = book_info || '{"pages":250,"category":"Secret"}'
+
+where book_info ->> 'author' = 'Prabhakar'
+returning *
+
+
+--Add Nested array json key value
+
+update books
+set book_info = book_info || '{"availablity_locations":[
+"India","New York","USA"
+]}'
+
+where book_info ->> 'author' = 'Prabhakar'
+
+--Delete The key from the json data (Best Seller)
+--for delete will use -
+
+update books
+set book_info = book_info - 'best Seller'
+
+where book_info ->> 'author' = 'Prabhakar'
+
+--Delete arrays values from json data
+--use #-
+
+update books
+set book_info = book_info #- '{availablity_locations,1}'
+
+where book_info ->> 'author' = 'Prabhakar'
+
+
+select * from books
+
+
+
+--Create Json From Table
+####################################
+
+
+--1 Lets Output as in Json from Directors table
+
+select * from directors
+
+--to convert table data into json we can use row_to_json function
+
+--all table column in json data
+select row_to_json(directors) from directors
+
+--Selected column json data
+select row_to_json(d) from 
+(select director_id,first_name,last_name from directors ) as d
+
+
+--Extract all keys from json data
+
+select * ,
+jsonb_object_keys(book_info)
+from books
+
+
+--get key value o/p from json data
+
+select
+bf.key,
+bf.value
+from books, jsonb_each(books.book_info) bf
+
+
+
+
+select * from contacts_docs
+
+--get all record where first_name Jhon we r serching on 20K json rows
+
+select * from contacts_docs
+where body @> '{"first_name":"John"}'
+
+--To see the total execution time and which index is using by query
+-- Explain analyze
+
+Explain Analyze 
+select * from contacts_docs
+where body @> '{"first_name":"John"}'
+
+--Execution time is 10ms.. bcz scan is happening to all table seq scan(all table scan)
+
+--Lets speed up the query scan time
+--Using GIN Indexing type
+
+/*
+
+GI Index :-
+ Gi means generalized inverted Index.
+ The core capability of GI Index is speed up Full TEXt Searches.
+ When performing searching based on specific keys or elements in a TEXT or a documents. GIN Index is good to go.
+ 
+*/
+
+--Lets Create GIN Index.......
+
+create index idx_gin_contacts_docs_body on contacts_docs Using GIN(body)
+
+--Now again analyze the execution time
+
+Explain Analyze 
+select * from contacts_docs
+where body @> '{"first_name":"John"}'
+
+--Now average time is .4ms
+
+--Check Size of index............result in KB.......
+
+select pg_size_pretty(pg_relation_size('idx_gin_contacts_docs_body'::regclass)) as index_name
+--3664 kB for 20k record
+
+/*
+--Challanges With GIN Index :-
+ Depending on the complexity of data maintaining GIN Indexes can be expensive....
+ 
+ Creation of GIN Index consumes time and resources as the index has to search through the whole documents
+  to find the key and theri row id..
+ 
+ It Can be even more challanging if the GIN indexs is bolated..
+ Also, the size of GIN Index can be vary big based on 	the data size and its complexity
+*/
+
+
+--There is better Index 
+create index idx_gin_contacts_docs_body_cool on contacts_docs Using GIN(body jsonb_path_ops)
+
+
+--Check Size of index............result in KB.......
+
+select pg_size_pretty(pg_relation_size('idx_gin_contacts_docs_body_cool'::regclass)) as index_name
+
+--Now size is 2512 kB for 20k record
+
+--Now create the index on the specific json key
+create index idx_gin_contacts_docs_body_fname on contacts_docs Using GIN((body->'first_name') jsonb_path_ops)
+
+select pg_size_pretty(pg_relation_size('idx_gin_contacts_docs_body_fname'::regclass)) as index_name
+--now size is 288kb from 3664KB
+
+
+Explain Analyze 
+select * from contacts_docs
+where body @> '{"first_name":"John"}'
+
+
+
+-----------Indexing In Postgres-----------------------
+###############################################################
+
+/*
+
+An Indixing is a Structured relation..
+
+An Index help improve the access of data in our database..
+
+An Index is a data Structure that allow faster access to the underlying table so it will result quickly..
+
+Adding Indexes will improve the performance or quickly access to data but they add a cost to the data modifications..
+
+*/
+
+----CREATE INDEX-----------------
+##########################################
+
+/*
+
+We Can Put the index on table column and columns
+
+Why Can't be put the index on all columns ?
+ Too Many index will result in slow insert/delete/update Operations (High Costs)
+
+PostgreSQL supports indexes with up to 32 indexes.....
+
+TWO Main Basic index Type :- 
+
+INDEX  :- Create a index on only values of a column and columns 
+
+UNIQUE INDEX :- create and index on only UNIQUE Value on column or columns
+
+
+SYNTAX :-
+
+CREATE INDEX index_name ON table_name (col1,col2.....)
+
+CREATE UNIQUE INDEX index_name ON table_name(col1,col2...)
+
+--Naming Convention of Index :---
+
+CREATE INDEX idx_table_name_column_name
+
+CREATE UNIQUE INDEX  idx_u_table_name_column_name
+
+
+*/
+
+
+-- Create Index On single column on order table
+
+Create INDEX idx_order_shipe_city on orders(ship_city)
+
+--Create Index On one or more column
+
+Create Index idx_order_order_id_customer_id ON Orders(order_id,customer_id)
+
+/*
+
+It is important to note that when creating multi column indexes we should always place the most slective
+columns first. PostgreSql will consider a multi-column index from the first column onwards so if the first columns
+are most slective the index access method will be chepest 
+
+Order of the fiels
+How we r using into Where Clauses 
+
+*/
+
+

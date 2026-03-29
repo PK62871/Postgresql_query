@@ -2967,3 +2967,129 @@ How we r using into Where Clauses
 */
 
 
+
+-----Create UNIQUE INDEX------------
+###############################################
+
+/*
+
+--PRIMARY KEY and INDEXES
+--------------------------
+1.. Normally The Primary Key of a tables are kept with a UNIQUE INDEX
+
+2..if We DEfine a Unique Index on one or more columns the combined values in these columns cannot be
+   duplicated in multiple rows.
+
+*/
+
+--Create Unique Index on order table on field order_id
+
+CREATE UNIQUE INDEX idx_u_employee_employee_id ON products(product_id);
+
+--Create Unique Index on employees table on field employee_id
+
+CREATE UNIQUE INDEX idx_u_employees_employee_id ON employees(employee_id)
+
+--Create unique Index on multiple columns in Orders tables
+
+CREATE UNIQUE INDEX idx_u_order_id_customer_id ON Orders (order_id,customer_id)
+
+--Note :- UNIQUE Index on Multiple columns means we can't insert duplicate value in same row value must be unique
+--        otherwise will get error unique key violation...
+
+
+--List All Indexes...........
+#######################################
+
+--using pg_indexes tables
+
+--all Indexes
+
+SELECT * FROM pg_indexes 
+
+--get in specific schema
+
+SELECT * FROM pg_indexes 
+ where schemaname = 'public'
+ order by tablename,indexname
+
+
+--Get all index of a pariticular table
+
+SELECT * FROM pg_indexes 
+ where tablename = 'contacts_docs'
+ order by tablename,indexname
+
+
+
+--Size Of The Table indexes in KB
+
+SELECT
+pg_size_pretty (pg_indexes_size('movies'));
+
+-- NOTE :- indexes Sixze will increse based on data growing
+
+
+-----List Count For All Indexes------------------
+################################################################
+
+/*
+
+Adding indexes may improve the speed of the data access but they add a COST to add the data modification.
+ Therefore it is important to understand if the index is used 
+
+ pg_stat_all_indexes  :- this is table which contains lot infor related to index
+ 
+*/
+
+--all stats
+
+select * from pg_stat_all_indexes -- default all internal + our own schma info
+--we can see our index is getting used or not in that tbale colmn name is idx_scan  and other
+
+--all stats in a particular schema
+
+ select * from pg_stat_all_indexes where schemaname = 'public'
+
+ --all stats only to particular table
+ 
+ select * from pg_stat_all_indexes where relname = 'movies'
+
+
+ --DROP AN INDEX
+ ###########################
+
+ DROP INDEX [CONCURRENTLY]
+ [IF EXISTS] index_name
+ [CASCADE | RESTRICT]
+
+ -- CASECADE :- If the index has the dependent objects e can use the CASCADE Option to automatically drop these
+--                objects and all objects that depends on those objects
+
+
+--RESTRICT :-- The RESTRICT option Instruct to the POSTGRESQL to refuse to drop the index if any objects depend on it
+
+--  The Drop INDEX uses RESTRICT by default
+
+DROP INDEX  idx_u_employees_employee_id;
+
+
+--SQL EXECUTION STAGE
+#############################
+
+/*
+
+Four Stage :- 
+
+Parser :- it handles the textual form of the statement (the SQl text) and verify wether it is crt or not
+
+ disassemble info into tables, cloumns,clauses etc
+ 
+rewruter :- applying any syntatics rules to rewrite original SQL Statement
+
+Optimizerr :- finding the very fastest path to the data hat the statemnt / query needs
+
+executor :- responsible for effectively going to the storage and retrieving (or inserting) the data get physical access to data
+
+*/
+

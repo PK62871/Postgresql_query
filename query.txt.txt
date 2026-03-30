@@ -3093,3 +3093,146 @@ executor :- responsible for effectively going to the storage and retrieving (or 
 
 */
 
+
+
+----INDEX NODES-------------
+###################################
+
+/*
+
+An Index is used to access the data Set..
+
+Data File and Index Files are seperated but they are nearby..
+
+Index Node Scan Types :-
+
+ Index Scan :- index -> Seeking the tuples -> the read again the data
+
+Select * from orders where order_id = 1 // type is Index Scan
+
+ Index Only Scan :- requested index columns only -> directly get data from index file.
+
+ Select order_id from orders where order_id = 1
+ // Index Olny Scan bcz we r only selcting order_id on which index is applied
+
+ BitMap Index Scan :- Build a memory bitmap of where tuples that satisfy the statement clauses
+*/
+
+
+--INDEX TYPES :-
+#######################
+
+/*
+
+B-TREE :-
+##################
+
+Default Index.. 
+
+Self Balancing tree
+ -Select,Insert , Delete, and sequential access in logarithmic time..
+
+Can be used for most operators and column types.
+
+supports the UNIQUE condition and
+
+Normally used to build the primary key indexes
+
+Uses when columns involves following operators
+
+ < , > , <= , >= , BETWEEN , IN , IS NULL , IS NOT NULL
+
+
+Use When Pattern Matching for LIKE base queries....
+
+ customer_id like'12%'
+
+--One Drawback Of B-Tree Copy the whole columns values into the tree structure..
+
+*/
+
+
+------Hash Index-------------
+#######################################
+
+/*
+
+For Equality Operators (Only Simple equality comparision =)
+
+Not for range or disequality operators.
+
+Larger than b-tree index..
+
+
+SYNTAX :-
+
+CREATE INDEX index_name ON table_name USING Hash(column_name);
+
+*/
+
+--Create hash index......
+
+CREATE INDEX idx_order_order_date ON orders USING hash(order_date)
+
+--Use 
+explain Select * from orders where order_date = '2020-02-02'
+
+
+-------BRIN(Block range Index) INDEX---------------
+#########################################
+
+/*
+
+Block range indexes...
+
+data block -> min to max value
+
+smaller indexu
+
+Less Costly to maintain than b-tree index
+
+Can we use on large table vs b-tree index
+
+Used Linear sort order e.g. customers -> order_date
+*/
+
+
+
+--GIN INDEX--------------
+######################################
+
+/*
+
+Generalized Inverted Index..
+
+Point to multiple tuples
+
+used with array type data..
+
+Used in full-text search
+
+Useful when we have a multiple value stored in a single column
+*/
+
+
+
+--EXPLAIN STATEMENT---------
+###############################
+
+/*
+
+It will show Query execution Plan..
+
+Shows the lowest cost among evaluated plans
+
+will not execute the statemnt we enter, just show query only
+
+This will show execution nodes that the executor will use to provide you with the dataset 
+*/
+
+
+EXPLAIN your_statemnt;
+
+Explain select * from orders where order_id = 1
+
+

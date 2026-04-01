@@ -3236,3 +3236,98 @@ EXPLAIN your_statemnt;
 Explain select * from orders where order_id = 1
 
 
+
+----Using organized vs random Data
+########################################
+
+
+select * from t_big limit 10
+
+explain (analyze true, buffers true ,timing true)
+select * from t_big where id < 10000
+
+
+--Create new table with same data as in t_big but randomly insert
+
+create table t_big_random as select * from t_big order by random();
+
+create index idx_t_big_random_id ON t_big_random(id)
+
+select * from t_big_random limit 10
+
+VACUUM ANALYZE table_name; -- it will create statics on table data
+
+VACUUM ANALYZE t_big_random
+
+
+explain (analyze true, buffers true ,timing true)
+select * from t_big_random where id < 10000
+
+
+
+--Partial index-----------
+--##################################
+
+--Partial Index :- To Improve the performance of the query While reducing the index Size.........
+
+CREATE INDEX index_name ON table_name Where conditions
+
+--See the index size of current Index
+
+select * from pg_indexes where tablename = 't_big'
+
+Select
+pg_size_pretty(pg_indexes_size('t_big'))
+
+--Create Partial index
+
+CREATE INDEX idx_p_t_big_name ON t_big(name)
+ where name not in('Adam','Linda')
+
+
+
+-----Expression Index------------
+--#########################################
+
+/*
+
+1. An Index will get Created on expression  ex :-
+ UPPER(first_name),
+ LOWER(last_name)
+ MIN(column)
+ MAX(Column)
+ EXTRACT(day from Date Column)
+
+2. PostgreSQL Will consider ing that index when the expression that defines the index appears in the 
+  --Where Clause or
+  in the order by clause of the query statement
+
+3. Very expensive Indexes
+   PostgreSQL has to evaluate the expression for Each Rows when it is INSERTED or UPDATED and use the result for indexing.
+
+SYANTAX :-
+
+CREATE INDEX index_name ON table_name(expression)
+
+*/
+
+CREATE INDEX idx_express_t_date_created_date ON orders(EXTRACT(day from created_date));
+
+select * from orders where EXTRACT(day from created_date) = 2
+
+
+---Adding Data while Indexing is creating
+--#################################################
+
+CREATE INDEx CONCURRENTLY :- This will help to create index during data insertion
+
+CREATE INDEX CONCURRENTLY idx_orders_order_id ON orders(order_id)
+--But this will not gurantee that it will get created or not
+
+
+Select oid, relname, relpages, reltuples,
+i.indisunique, i.indisclustred, i.indisvalid
+pg_catalog.pg_get_indexdef(i.indexrelid,0,true)
+from pg_class c join pg_index i on c.oid = i.indrelid
+where c.relname = 't_big'
+

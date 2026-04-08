@@ -3399,4 +3399,122 @@ REINDEX TABLE CONCURRENTLY t_big;
 
 
 
+------Views In PostgreSQL--------------
+--############################################
+
+/*
+
+To Vaoid the repeatative task like to execute the sdame query every day or mont to update the same table sooner or later 
+the shortcut is postgresql objects is VIEWS
+
+We Can save our query into view, so instead of writing longer queries,we can just rafter to a view..
+
+A View is a database object that is of a stored query..
+
+A View is a virtual table we can create dynamically using a saved query acting acting as a viurtual table
+
+A View help us to encapsulate queries and logic into reusable PostgreSQL database objects that will speedup our workflow
+
+View are like don't repeat yourself.
+
+Similar to a regular table we can use for :-
+ 1. query a view
+ 2. join a view to regular table (or other view) and,
+ 3. use the view to update insert data into table.
+
+NOTE :- regular view do not store any data except the 'meterialized view'
+
+
+*/
+
+
+--Creating a view------------
+--#############################
+
+--CREATE OR REPLACE VIEW view_name AS query
+
+--'query' can be 
+
+--SELECT
+ -- SELECT with subquery
+ --SELECT with Joins
+ --Preety much anything that we can run via SELECT can be turned into a view!
+
+
+ --1. Create a views to include all movies with directors firstname and lastname
+
+CREATE OR REPLACE VIEW v_movie_quick AS
+ SELECT
+ movie_length,
+ movie_name,
+ release_date
+ from movies mv
+
+
+------Create another views.........
+
+CREATE OR REPLACE VIEW v_movies_directors_all AS
+SELECT 
+mv.movie_id,
+mv.movie_name,
+mv.movie_length,
+mv.movie_lang,
+mv.age_certificate,
+mv.release_date,
+mv.director_id,
+
+d.first_name,
+d.last_name,
+d.date_of_birth,
+d.nationality
+from movies mv
+INNER JOIN directors d ON d.director_id = mv.director_id
+
+
+--View is Created....Now Use The views..to get the data.....
+SELECT * from view_name
+
+SELECT * FROM v_movie_limited_columns
+
+SELECT * FROM v_movies_directors_all
+
+
+------RENAME A VIEWS----------------
+--##########################################
+
+--ALTER VIEW view_name RENAME TO new_view_name
+
+ALTER VIEW v_movie_quick RENAME TO v_movie_limited_columns
+
+
+--Delete/Drop Views-----
+--##############################
+
+--DROP VIEW view_name
+DROP VIEW v_movie_limited_columns
+
+--USING Conditions/Filters with views
+--########################################
+
+--1. Create a View to list all movies released after 1997
+
+CREATE VIEW v_movies_after_1997 as
+Select * from movies 
+where release_date >= '1997-12-31'
+order by release_date desc
+
+
+--We Can also filter data based on condition from views
+--We can use multiple Filter conditions with views
+
+SELECt * FROM v_movies_after_1997
+WHERE movie_lang = 'English'
+ORDER by release_date desc 
+
+
+--Filter all movies with directors where Nationality American and japanese
+
+Select * from v_movies_directors_all
+where nationality in('American','Japanese')
+ 
 

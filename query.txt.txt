@@ -3518,3 +3518,136 @@ Select * from v_movies_directors_all
 where nationality in('American','Japanese')
  
 
+
+----View With UNION-------
+--################################
+
+CREATE VIEW v_all_actors_directors AS
+SELECT
+ first_name,
+ last_name,
+ 'actors' as people_type
+ from actors
+ 
+UNION 
+
+ SELECT
+ first_name,
+ last_name,
+ 'directors' as people_type
+ from directors
+
+
+ Select * from v_all_actors_directors
+ Where first_name LIKE 'J%' order by first_name,last_name asc
+
+
+------Connecting Multiple tables With Single Views---------
+--###################################################################
+
+--Connect Movies Directors and movies_revenues.....
+
+CREATE VIEW v_movies_directors_revenues AS
+Select 
+ mv.movie_id,
+ mv.movie_name,
+ mv.movie_lang,
+ mv.movie_length,
+ mv.release_date,
+ mv.age_certificate,
+
+ d.director_id,
+ d.first_name,
+ d.last_name,
+ d.date_of_birth,
+ d.nationality,
+
+ mr.revenue_id,
+ mr.revenues_domestic,
+ mr.revenues_international
+ 
+from movies mv
+INNER JOIN directors d ON mv.director_id = d.director_id
+INNER JOIN movies_revenues mr ON mv.movie_id = mr.movie_id
+order by 13,14 nulls last
+
+--Get The View Result....and Filter based on Some Conditions
+
+SELECT * FROM v_movies_directors_revenues
+Where age_certificate = '12'
+
+
+---Chnaging Views------------
+--####################################
+
+--Can We re-arrange a Column to an existing View.......
+
+CREATE VIEW v_directors AS
+SELECT
+ first_name,
+ last_name
+FROM directors
+
+--If we Chnage The Order OF Select Column Then new View Will Get Created.....
+
+CREATE VIEW v_directors1 AS
+SELECT
+ first_name,
+ last_name
+FROM directors
+
+--For Re-arrange delete the existing view and then create a view for Re-arranging the Columns!
+
+------Remove The Column From The View-----------
+--################################################
+
+CREATE VIEW v_directors AS
+SELECT
+ first_name,
+ last_name
+FROM directors
+
+-- NOTE :- Either We can rename the original View and then remove the Column which we want
+        -- Or We can Drop the view and re-create view With Desire Column
+
+--PostgreSQl does not Support removing an existing column from the view
+
+
+--Can We add the new Column to the existing view
+--#################################################
+
+--By Using CREATE OR REPLACE
+
+-- But, NOTE :- We Can not add new column in between we have top add after from earlier selected Column
+
+CREATE OR REPLACE VIEW v_directors AS
+SELECT
+ first_name,
+ last_name,
+ date_of_birth,
+ nationality
+FROM directors
+
+
+--A regular View-----
+--###########################
+
+--Does Not Store Data Physically
+--Always Give Updated Data
+
+Select * from v_directors
+
+--add new Record to Directors table
+
+Insert Into directors(first_name) values('Testing1')
+
+delete from directors where director_id = 39
+
+
+
+
+
+
+
+
+

@@ -3644,6 +3644,56 @@ Insert Into directors(first_name) values('Testing1')
 delete from directors where director_id = 39
 
 
+--What is UPDATABLE VIEWS-------
+--########################################
+
+--CREATE OR REPLACE VIEW view_name AS query.
+
+--An Updatable View allow us to update the data on the underlying data..However there are some rules :-
+
+/*
+
+The 'query' Must have one FROM entry which can be either a table or another updatable view
+
+The 'query' Cannot contains the following at the top level 
+
+  DISTINCT
+  GROUP BY
+  WITH
+
+  LIMIT
+  OFFSET
+
+  UNION
+  INTERSECT
+  EXCEPT
+
+  HAVING
+  
+*/
+
+
+--Create updatable view for directors table
+
+CREATE OR REPLACE VIEW vu_directors AS
+
+Select
+first_name,
+last_name
+from directors
+
+--add data into directors table via view not from table
+
+INSERT INTO vu_directors (first_name) values('dri1'),('dri2')
+
+select * from directors
+
+--DELETE recors via view not from underlying table
+DELETE FROM vu_directors where first_name ='dri2'
+
+SELECT * FROM vu_directors
+
+
 
 
 

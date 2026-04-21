@@ -3695,6 +3695,148 @@ SELECT * FROM vu_directors
 
 
 
+---UPDATABLE VIEWS WITH CHECK OPION----------
+--#####################################################
+
+--With Check Option clause ensure that the changes to the base tables through the view satisfy the view-defining condition
+--Its Provides a good added benifits as a Security Measures
+
+
+--Create table Country
+
+Create table country(
+country_id  serial primary key,
+country_code varchar(8),
+country_name varchar(50)
+
+)
+
+select * from country
+
+Insert into country(country_code,country_name)values
+('USA','Californiea')
+('USA_002','Washington'),
+('UK-003','London')
+
+
+--Create View v_cities_us to see all USA based cities
+	
+CREATE OR REPLACE VIEW v_cities_us AS
+select 
+ country_id,
+ country_code,
+ country_name
+from country
+where country_code  = 'USA'
+
+--Get view
+
+select * from v_cities_us
+
+--What If User added a UK based country in our views
+Insert into v_cities_us(country_code,country_name) values
+('UK','Greater Manchester')
+
+--Here We have a problem that no record is showing for UK Countries however the base tables country contains newly created record
+
+--NOTE :- 
+--To Solve the Above problem will set our views to use CHECK OPTION
+
+--Update our Views With Check Options
+
+CREATE OR REPLACE VIEW v_cities_us AS
+SELECT
+ country_id,
+ country_code,
+ country_name
+FROM country
+ WHERE country_code = 'USA'
+ WITH CHECK OPTION
+
+
+select * from v_cities_us
+
+--Now Insert UK Country
+
+Insert into v_cities_us(country_code,country_name) values
+('UK','Leeds')
+
+
+--Try the UPDATE Operations on view having with check Option can we add ??
+
+select * from v_cities_us
+
+
+update v_cities_us
+set country_code ='UK'
+where country_name = 'Washington'
+
+--Now let's add USA based City
+
+insert into v_cities_us(country_code,country_name) values
+('USA','Chicago')
+
+
+--USING LOCAL and CASCADE in WITH CHECK OPTION
+--#################################################
+
+--1 Tp demonstrate the local and cascade functionality lets create view for all cities starting with lewtter 'C'
+
+CREATE OR REPLACE VIEW v_cities_c AS
+select country_id,country_code,country_name
+from country where country_name ilike 'c%'
+
+select * from v_cities_c
+
+
+--Now We r going to NEST our views within views
+--################################################
+
+--3... We will create a new simple view v_cities_us_c to list :-
+     -- all cities starting with 'c'
+	 -- and withing country code US 
+
+ -- country_code = 'US' | city_name = 'C%'
+
+ CREATE OR REPLACE VIEW v_cities_us_c AS
+  SELECT
+  country_id,
+   country_code,
+   country_name
+from v_cities_c ---Here we already filter country start from c
+where country_code = 'USA'
+WITH LOCAL CHECK OPTION;
+
+select * from v_cities_us_c
+
+--Insert new record
+
+Insert into v_cities_us_c(country_code,country_name) values
+('USA','Connecticut')
+
+select * from country
+
+--The Local conditions are satisfied withing the CURRENT VIEW that is v_cities_us_c
+--The Data Must be of country_code  'USA' for all data 
+
+
+---Now use CASCADE and see what is the effect 
+
+
+ CREATE OR REPLACE VIEW v_cities_us_c AS
+  SELECT
+  country_id,
+   country_code,
+   country_name
+from v_cities_c ---Here we already filter country start from c
+where country_code = 'USA'
+WITH CASCADED CHECK OPTION;
+
+--Insert record city name start with other than c
+
+Insert into v_cities_us_c(country_code,country_name) values
+('USA','Bostan')
+
 
 
 

@@ -3838,6 +3838,140 @@ Insert into v_cities_us_c(country_code,country_name) values
 ('USA','Bostan')
 
 
+----Meterialized views-----------
+--####################################
+
+/*
+
+1. A Meterialized view allow us to :-
+  --Store result of query physically and
+  --update the data periodically
+
+2. A Meterialized View  cache the result of complex query and then allow us to refresh this result periodically
+
+3. A Meterialized views executes the query once and then holds onto those results for us viewing plesure 
+  untill we refresh the Meterialized view again..
+
+SYNTAX :--
+
+CREATE METERIALIZED VIEW IF NOT EXISTS view_name AS query
+WITH [NO] DATA
+
+-- IF we want to load the data into Meterialized view during creation time we will use WITH DATA
+--A Meterialized view can be use like regular table even we can create index and primary key in that.
+
+
+*/
+
+---Create Meterialized View
+
+CREATE MATERIALIZED view if not exists mv_directors AS
+
+Select first_name,last_name
+ from directors
+With data
+
+
+--Access the views
+select * from mv_directors
+
+--Now create with no data
+
+CREATE MATERIALIZED view if not exists mv_directors_nodata AS
+
+Select first_name,last_name
+ from directors
+With no data
+
+--With No DATA view is flagged as unreadable means we cannot query data from the view
+--Untill we load data into it
+
+REFRESH MATERIALIZED view mv_directors_nodata
+ 
+
+select * from mv_directors_nodata
+
+--DROP a materialized views
+--############################
+
+--DROP MATERIALIZED VIEW view_name;
+
+--Points to Note :-
+--1. do not drop materialized view unless we truly want to use it anymore
+
+--2. Dropping and re-create it treats it just like a table and we lose the main benifits of using a materialized view
+  -- which is that it can be accessed while it's updating with a simple line of code 
+
+ --REFRESH materialized view concurrently mat_view
+
+--3. Anytime we run a CREATE materialized view query without the WITH NO DATA Clause we are locking the table 
+  -- for as long as it take to fully populate the view..
+
+--4. Ideally this will happen only one time when will create materialized view first time.
+  -- and the we can use the concurrent refresh command to keep our data as many time as possible.....
+
+--Changing the materialized view Data--
+--###########################################
+
+--Should be update the data in underlying query table or via materialized view ?
+
+select * from mv_directors
+
+--Insert through view
+
+Insert into mv_directors_nodata(first_name) values('dir1','dir2')
+
+--we cannot insert through materialized view
+
+--Insert into table directly and see the data into materialized view
+
+Insert into directors(first_name) values('dir1'),('dir2')
+
+select * from mv_directors
+
+--without refresh data will not get populate into  view 
+
+refresh materialized view mv_directors
+
+
+--Delete the data through view
+
+delete from mv_directors where first_name = 'dir1'
+
+-- we cannot delete directly through view and not also update
+
+
+---How to refresh the data in a materialized view
+--##################################################
+
+--REFRESH MATERIALIZED View view_name;
+
+--NOTE :- When we refresh data for materialized view PostgreSQL LOCK the entire table so till that time will not make any query to that table
+
+CREATE MATERIALIZED VIEW mv_directors_us AS
+
+Select 
+director_id,
+first_name,
+last_name,
+date_of_birth,
+nationality
+from directors where nationality = 'American'
+WITH NO DATA;
+
+select * from mv_directors_us
+
+--Now refresh the viw to populate the data
+
+REFRESH MATERIALIZED VIEW mv_directors_us
+
+--NOTE :- we can use concurrently refresh the view to avoid locking table
+--but to use concurrent refresh we have to create unique index first on materialized view 
+
+-- REFRESH MATERIALIZED VIEW CONCURRENTLY mv_directors_us
+
+
+
 
 
 

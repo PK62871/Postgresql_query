@@ -3973,6 +3973,98 @@ REFRESH MATERIALIZED VIEW mv_directors_us
 
 
 
+------SUB-QUERY------------
+--#####################################
+
+/*
+
+1. A Sub-Query allow us to construct a complex Query.
+2. A Subquery is nested inside another query.
+3. Typically it's used for a calculation or logical test that provides a value or set of data to be passed 
+   into the main portion of the query.
+4. Subquery can be nested inside a SELECT , INSERT , UPDATE , OR DELETE
+5. Can also be used after FROM OR WHERE....
+
+SYNATX :-
+
+Outer Query
+ (Inner QUERY)
+
+SELECT 
+ column_list
+FROM tablename
+WHERE
+(
+   SELECT column_list 
+  FROM tablename``
+)
+
+*/
+
+--FIltering With Subqueries in a WHERE Clause
+--##############################################
+
+--1. Find the movies average movies length and then
+ -- use the results for the first query and then used select to find movie which are more than average movie length
+
+SELECT movie_name , movie_length
+FROM movies
+where movie_length >
+(
+ SELECT AVG(movie_length)
+ from movies
+
+ )
+ 
+--2nd with more filter
+
+SELECT movie_name , movie_length
+FROM movies
+where movie_length >
+(
+ SELECT AVG(movie_length)
+ from movies
+
+ )
+ and movie_lang = 'English' -- this filter is on outer query
+
+
+
+--Get All actors who is younger than a actors name is Douglas
+
+Select first_name , last_name , date_of_birth from actors 
+where date_of_birth >
+(
+	Select date_of_birth 
+	from actors
+	where first_name ='Douglas'
+)
+
+----SUB-QUERY WITH IN OPERATOR------------
+--#################################################
+
+--1. Wat IF Sub-query or Inner query is returning multiple records
+
+--Find all Movie where domestic revenue is greater than 200
+
+select movie_name , movie_lang
+from movies where movie_id in
+(
+	SELECT movie_id FROM movies_revenues
+	where revenues_domestic > 200
+)
+
+
+--Find All movie where domestic revenues are higher than the international revenues
+
+Select movie_name, movie_lang from movies
+where movie_id in
+(
+	select movie_id from movies_revenues 
+	where revenues_domestic > revenues_international
+)
+
+
 
 
 

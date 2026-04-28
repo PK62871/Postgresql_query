@@ -4061,6 +4061,136 @@ Select movie_name, movie_lang from movies
 where movie_id in
 (
 	select movie_id from movies_revenues 
+
+
+
+
+----SUB-QUERY With JOINS----
+--##################################
+
+--1. List All the directors where their movies made more than the average of total revenue of all english movies
+
+--Outer Query :- List All the directors
+--Inner Query :- where their movies made more than the average of total revenue of all english movies
+
+Select d.director_id,
+ SUM(mr.revenues_domestic + mr.revenues_international) as "total_revenues"
+FROM directors d
+ Left Join movies mv ON mv.director_id = d.director_id
+ Left Join movies_revenues mr ON mr.movie_id = mv.movie_id
+ WHERE (mr.revenues_domestic + mr.revenues_international) >
+
+(
+	SELECT
+	AVG(revenues_domestic + revenues_international) as "avg_total_revenues"
+	from movies_revenues
+)
+group by 1  order by 1
+
+
+----SUB_QUERY WITH ALIAS
+--#################################
+
+--List ALL MOVIES
+
+Select * from
+(
+ Select * from movies
+ ) as mov
+
+
+--A SELECT Without FROM
+--############################
+
+--In This Query Whatever value Inner Query Will Return Outer Query Will Just take and print
+
+SELECT
+ (
+ 	SELECT MAX(revenues_domestic) AS "MAX DOMESTIC REVENUES" FROM movies_revenues
+ ),
+ (
+  	SELECT MIN(revenues_domestic) AS "MIN DOMESTIC REVENUES" FROM movies_revenues
+
+ ),
+ (
+   	SELECT AVG(revenues_domestic) AS "AVG DOMESTIC REVENUES" FROM movies_revenues
+
+ )
+
+
+--Correlated SUB-Query
+--############################
+
+/*
+
+- A correlated subquery is a subquery that contains a reference to a table (in the parent query)that also appears
+ in the outer query
+
+-PostgreSQl Evaluates from inside to outside 
+
+*/
+
+--1. List movie name, movie language,and movie age certification for allmovies with an above minimum length of 
+ --for each age certification
+
+SELECT
+mv1.movie_name,
+mv1.movie_lang,
+mv1.movie_length,
+mv1.age_certificate
+FROM movies as mv1
+WHERE movie_length >
+(
+	SELECT
+	 MIN(movie_length) FROM movies as mv2
+	 where mv1.age_certificate = mv2.age_certificate
+)
+ORDER BY movie_length ASC
+
+
+
+----USING In With Sub-Query-----------
+--############################################
+
+SELECT Column_list
+FROM tablename
+WHERE column_name in(SELECT statement)
+
+--1. Find Suppliear that r from same country as Customers
+
+Select * from suppliers
+WHERE country IN(Select country from customers)
+
+--2. Find Customers that are same city as suppliers
+
+SELECT * FROM
+Customers
+where city In(Select city FROM Suppliers)
+
+
+--Using ANY With Sub-Query----------
+--##########################################
+
+SELECT column_list FROM
+tablename
+WHERE  columname operators_expression ANY(SELECt statement)
+
+--Operators
+= , != , >= , <= , <
+
+--Logically IN is Equvalent to ANY
+--The ANY Construct is far more versatile as it can be combine with various operators not just =
+
+--1. Find Customers details Where orders more than 20 itmem in a single product
+
+Select * from customers
+WHERE customer_id = ANY
+(
+ SELECT 
+ customer_id from orders o
+ INNER JOIN order_details od ON o.order_id = od.order_id
+ WHERE quantity > 20
+)
 	where revenues_domestic > revenues_international
 )
 

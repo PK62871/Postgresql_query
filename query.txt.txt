@@ -4197,5 +4197,334 @@ WHERE customer_id = ANY
 
 
 
+---Common Table Expression (CTEs)-----
+--########################################
+
+/*
+
+CTE is a temporary result taken from SELECt Statements
+
+A Second approach to create temp tables for query data instead of using subqueries in a DFROM Clauses
+
+Select * From 
+(
+Subquery
+) = CTE
+
+A Good alternatives of Subqueries
+
+Using CTE we can find one or more tables upfront with Subqueries
+
+CTE1 = table1
+CTE2 = table2
+CTE3 = table3
+
+Lifetime of CTE is equal to the lifetime of query
+
+2 type Of CTE :-
+1. Materialized :- perform a CTE that materialized a temp resultset
+2. Not Matarialized :- Do not Materialized a temp result Set(Default)
 
 
+CTEs are normally used to simplify the complex Joins and Subquery
+
+Unlike Subqueris CTE can be reference multiple time in multiple place in query statement
+
+CTE Can be use to improve readability of the code
+
+*/
+
+--SYNTAX OF CTEs :-
+
+WITH cte_name (Column_list) AS( 
+
+CTE_query_defination
+
+)
+Statement
+
+--The Statement Can contains SELECT , INSERT , DELETE OR UPDATE
+
+--1 Create Num Series From 1 to 10 and get By CTE.
+
+With num_series AS (
+
+ Select * from generate_series(1,10) as "ID"
+ 
+) Select * from num_series
+
+
+--2 List All Movies By director_id = 1;
+
+With cte_director_1 AS (
+
+  SELECT * FROM movies m
+  JOIN directors d ON d.director_id = m.director_id
+  WHERE d.director_id = 1
+)
+SELECT * FROM cte_director_1
+
+
+--3 View AlL Long Movies where long movies r 120h and More
+
+WITH cte_long_movie AS(
+
+	-- < 100 Short
+	--< 120 Medium
+	-- > 120 Long
+ SELECT 
+  movie_name,
+  movie_length,
+  (
+   CASE
+   WHEN movie_length < 100 THEN 'Short'
+   WHEN movie_length < 120 THEN 'Medium'
+   ELSE 'Long'
+   END
+  ) AS m_length
+ FROM movies 
+) 
+select * from cte_long_movie where m_length = 'Long'
+
+
+--Combine CTE With Tables........
+
+--4.Calculate total revenues for each Directors
+
+WITH cte_calculate_total_revenues AS (
+
+	SELECT 
+	d.director_id,
+	SUM(revenues_domestic + revenues_international) AS total_revenue
+	FROM movies m
+	JOIN directors d ON m.director_id = d.director_id
+	JOIN movies_revenues mr ON mr.movie_id = m.movie_id
+	group by d.director_id
+	
+) 
+SELECT 
+d.director_id,
+d.first_name,
+d.last_name,
+cte.total_revenue
+from cte_calculate_total_revenues cte
+ INNER JOIN directors d ON d.director_id = cte.director_id
+
+
+
+--Simulteneously DELETE , INSERT Via CTEs
+---############################################
+
+--Scenario We have 2 tables 
+
+/*
+
+articles             main articles
+articles_deleted     all articles that all are deleted
+
+We want to delete some aricles from 'articles' table
+we want all the record we have deleted from the articles tables to be inserted into the articles_deleted
+
+*/
+
+--aricles table
+
+CREATE TABLE articles(
+	article_id SERIAL PRIMARY KEY,
+	title VARCHAR(100)
+)
+
+--articles_deleted table
+
+CREATE TABLE articles_delete AS SELECT * FROM articles
+
+select * from articles_delete
+
+--insert Into article
+
+INSERT INTO articles (title) VALUES
+('ARTICLE1'),
+('ARTICLE2'),
+('ARTICLE3'),
+('ARTICLE4'),
+('ARTICLE5'),
+('ARTICLE6')
+
+--Now Delete From articles and insert into deleted_articles
+
+WITH cte_delete_article AS (
+ DELETE FROM articles WHERE article_id = 1
+ RETURNING *
+)
+INSERT INTO articles_delete 
+SELECT * FROM cte_delete_article
+
+
+--Analyze global Trade Data 
+
+create table trades(
+region text,
+country text,
+year int,
+imports numeric(50,0),
+exports numeric(50,0)
+)
+
+select * from trades
+
+--total data row count
+
+Select count(*) from trades
+
+--Select Distict region
+
+Select distinct(region) from trades
+order by region
+
+--Select Distict country
+
+Select distinct(country) from trades
+order by country
+
+--Select Min and Max year of reported
+
+Select Min(year), Max(year) from trades
+
+--Using Aggregate Function
+
+--Total Min,Max and Avg of imports and exports
+
+Select Avg(imports) ,
+ Sum(imports),
+ Min(imports),
+ Max(imports)
+from trades
+
+--Find Min Max Avg based On region
+
+Select region,
+	Sum(imports)/1000,
+	 Min(imports)/1000,
+	 Max(imports)/1000
+from trades
+Group By region
+
+
+--Using group By With Rollup
+
+Select
+region,
+ Avg(imports) from trades
+ group By region
+
+--Roll Up
+
+Select
+ region,
+ Avg(imports) from trades
+ group By Rollup (region)
+
+--RollUp grouping Multiple Column
+--#################################
+
+--grouping on more than one Column
+
+Select
+ region , country,
+Avg(imports) from trades
+Where Country In('USA','India','Brazil','Singapore')
+Group By RollUp (region,country)
+
+
+
+
+--Partitioning--------
+--############################
+
+/*
+
+Partitioning is Spliting pne table into :-
+
+  -multiple smaller
+  -logically divided and
+  -more managable piece of tables
+
+Partition Lead to a huge performance boost!
+ Postgresql is able to exclude partitons that for sure won't be affect by the data we r reading/writing
+ Read/Write Only What is needed
+
+Partition table will improve query performance by allowing the database query optimizer to scan only
+the data needed to satisfy of given query instead of scanning all content of a large table
+*/
+
+
+----Table inheritance In partitions----
+--##########################################
+
+/*
+
+In Postgres Inheritance :- When a table inherit from its parents table
+
+Example :- Master table -->>>>> master_child table
+*/
+
+--Create master table
+
+create table master(
+
+	pk Integer primary key,
+	tag text,
+	parent Integer
+);
+
+--Create child
+ Create table master_child() Inherits (master)
+
+Alter table master_child
+add constraint master_pk primary key(pk)
+
+--Insert into master
+
+Insert into master(pk,tag,parent) values
+(1,'Pen',0)
+
+--Insert Into Child
+
+Insert into master_child (pk,tag,parent) Values
+(2,'Pencil',0)
+
+select * from master -- this will also give child data so use ONLY 
+
+select * from master_child
+
+select * from Only master
+
+select * from Only master_child
+
+
+--Note :- In Postgres inheritance For insert whatever will insert Into Child table it will reflect in both parent & Child
+       -- But when will insert Into Child It will Not Reflect into Child
+
+--Now See The Effect of update operations
+
+--update master
+update master set tag = 'monitor'
+where pk = 2
+
+--Note :- Updating The master reflect will be happen Only on Child
+
+--Dropping master table
+
+Delete From master where pk = 2
+
+select * from master 
+
+select * from master_child
+
+--Droping master table here dependency is parent child
+
+Drop table master -- it will nt wrk 
+
+Drop table master cascade -- this will delete parent and all child associated with this
+
+ 

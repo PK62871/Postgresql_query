@@ -4527,4 +4527,548 @@ Drop table master -- it will nt wrk
 
 Drop table master cascade -- this will delete parent and all child associated with this
 
+
+
+--------Types Of Partitions--------
+--########################################
+
+/*
+
+ Range :- The table is partitions into 'ranges' defined by a key column or set of columns 
+          With no overlaps b/w the ranges of values assigned to diffrent partitions
+
+		Exzmple :-Date Range or any range Like 2020 and 2021 data will go in Seperate table 
+		In table_2020(Jan-Dec 2020) and table_2021(Jan-Dec 2021)
+		
+ List :- The table is partitioned by explicitly listing which key values appear in each partiton
+
+ Hash :- The table is partitoned by specifying a modulus and a remainder for each partitions 
+         Each partitons will hold the rows for which the hash value of the partition key divide by the 
+		 specified modulus will produce the specified remainder.
+*/
+
+
+---Partitons By Range-----------
+--####################################
+
+/*
+
+The table is partitions by ranges defined by a key column or set of column with No Overlap b/w 
+the ranges of values assigned to diff. partitons
+
+UseFul when working with Date like Daily/Weekly/Monthly/Yearly Ranges
+
+Consider partition by most granular level,
+
+ For a table partition by Date then we can partition by
  
+  a. day and have 365 daily partitions or 
+  b. partition by yean and then sub-partition by month and then sub-partition by day
+  c. Partition by year and then sub-partition by day
+
+  
+*/
+
+
+--Lets Create a master table 'employees_range'
+--Partition By Range(field)
+
+CREATE TABLE employees_range(
+	id bigSerial,
+	birth_date Date not null,
+	country_code varchar(40) not null
+)Partition by range(birth_date);
+
+--view data
+select * from employees_range
+
+--Now we have to create individual partitions tables based on birth-date range values
+/*
+
+FROM value1 to value2
+For Dates Value is important!!!
+
+--Lets Plan Partitions
+ 1. year Partitions
+ 2. tablename :- employees_range_y2000 for Year 2000 2000-01-01 to 2001-01-01 alway keep +1 date
+ 
+*/
+
+--Syntax :-
+ CREATE TABLE partition_table_name PARTITION OF matser_table_name
+ FOR VALUES FROM value1 to value2
+
+ --Now Create Partition For employee-range for Year 2000
+
+ CREATE TABLE employees_range_y2000 PARTITION OF employees_range
+ FOR VALUES FROM ('2000-01-01') TO ('2001-01-01')
+
+--Create 2nd partition For same table for year 2001
+
+
+ CREATE TABLE employees_range_y2001 PARTITION OF employees_range
+ FOR VALUES FROM ('2001-01-01') TO ('2002-01-01')
+
+--Now Insert Operation
+
+INSERT INTO employees_range(birth_date,country_code) VALUES
+('2000-01-01','US'),
+('2000-01-02','US'),
+('2000-12-12','US'),
+('2001-01-01','US')
+
+--view master table
+
+select * from employees_range
+
+--See Exzct Data of master table
+
+select * from ONLY employees_range
+
+--View Content OF Individual partition
+
+SELECT * FROM employees_range_y2000
+
+SELECT * FROM employees_range_y2001
+
+--Now Update the birth_date for employees 1 Once will update it will go in other paretitions
+--#############################################################################################
+
+UPDATE employees_range
+SET birth_date = '2001-10-10'
+WHERE id = 1
+
+--DELETE Operations
+--######################
+
+DELETE FROM employees_range 
+WHERE id = 1;
+
+SELECT * FROM employees_range;
+
+SELECT * FROM employees_range_y2000;
+SELECT * FROM employees_range_y2001;
+
+--QUERY Planing
+--################
+
+--Lets visualize the query planing in pgAdmin to explain(f7) to see how queries are runs
+
+SELECT * FROM employees_range
+
+--In above query we didn't specified WHERE Conditions , So postgreSQL doesn't know which partitions to SCAN.
+--so it will scan all partitions. This will be same as un-partitioned tables as the query is not using any partions.
+
+--Use With Condition So PostgresQL will use partition Directly
+
+SELECT * FROM employees_range 
+WHERE birth_date = '2000-01-02'
+
+--In above query it will directly Scan the exact partition Where data exists
+
+
+
+---Partitions By List------
+--#################################
+
+--PARTITION BY LIST(field)
+
+/*
+
+The table is partitioned by explicitly listing which key values appear in each partition.
+
+A list partitioned table can use any data type column that allow equallity comparisions as its partition key column
+
+Can also have multi-partition column(Composite) partition key
+
+Ideal for conditions when we know the values of partition key 
+
+	Example :- country_code :- UK,US,JP,SP --table will be _uk , _uk
+	         month_names :- jan -Dec 
+
+Create partition by list when we want to create on a list of values
+
+Example :- we have master tbale employees_list which country code :-
+           country_codes :- UK,US,SP,
+
+*/
+
+
+--Let's crate master table 'employees_list'
+--Partition By List(field)
+
+CREATE TABLE employees_list(
+	id bigserial,
+	birth_date DATE NOT NULL,
+	country_code VARCHAr(5)NOT NULL
+)PARTITION BY LIST (country_code);
+
+
+--Now will Create individual partition table based on field values
+
+--SYNTAX :- 
+CREATE TABLE partition_name PARTITION OF parent_table
+FOR VALUES IN(field)
+
+--All the US Cuntry_code will go in that partitions..
+
+CREATE TABLE employees_list_us PARTITION OF employees_list
+ FOR VALUES IN ('US');
+
+
+--All the Europe Cuntry_code will go in that partitions..
+
+--We can create partition with multiple values list
+
+CREATE TABLE employees_list_eu PARTITION OF employees_list
+FOR VALUES IN ('UK','DE','IT','FR','ES');
+
+
+--Get Data For master and partition tables
+
+Select * from employees_list
+
+select * from employees_list_us
+
+select * from employees_list_eu
+
+--Now Insert Operations
+
+INSERT INTO employees_list(id, birth_date, country_code)
+VALUES 
+(1, '2000-01-01', 'US'),
+(2, '2000-01-02', 'US'),
+(3, '2000-12-31', 'UK'),
+(4, '2001-01-01', 'DE');
+
+---Update Operations---
+--##################################
+
+Select * from employees_list
+
+select * from employees_list_us
+
+select * from employees_list_eu
+
+UPDATE employees_list set country_code = 'US'
+WHERE id = 4
+
+--Delete operations
+--##########################
+
+Select * from employees_list
+
+select * from employees_list_us
+
+select * from employees_list_eu
+
+DELETE FROM employees_list
+WHERE id = 2
+
+
+--Now Let's visualize the Query
+--------------------------------
+
+Select * from employees_list
+
+--In this above query we didn't specified the WHERE Condition so it will Scan all the partition to get the data 
+-- so it will be same as un-partitions table
+
+Select * from employees_list
+WHERE country_code = 'US'
+
+--In the above Query it will directly go to the respective partitions to get data
+
+
+-------Partitions By Hash-----------
+--#############################################
+
+--Partition By hash(field)
+------------
+
+/*
+
+The table is partitioned by specifying a modulus and remainder for each partition.
+
+This type is useful when we can't logically divide our data.
+
+Use this type when we want to reduce the table size by spreading rows into many smaller tables.
+
+Divede our employee_hash master table to 3 (almost) equally # of data rows.
+*/
+
+--Lets create master table employees_hash
+--PARTITION BY HASH(field)
+
+CREATE TABLE employees_hash(
+	id bigserial,
+	birth_date Date Not Null,
+	country_code VARCHAR(5) NOT NULL
+)PARTITION BY HASH(id);
+
+
+--Now Create Individual partition table based on field values
+
+--SYNTAX :-
+ CREATE TABLE partition_name PARTITION OF master_table
+ FOR VALUES WITH (MODULUS m , REMAINDER n);
+
+--Modulus m :- It means how many row we want in that partition
+--Remainder n :- It means from where it will start like 0 , 1 , 2 = 3
+
+ --now create
+
+CREATE TABLE employees_hash_1 PARTITION OF employees_hash
+FOR VALUES WITH(MODULUS 3 , REMAINDER 0);
+
+CREATE TABLE employees_hash_2 PARTITION OF employees_hash
+FOR VALUES WITH(MODULUS 3 , REMAINDER 1);
+
+CREATE TABLE employees_hash_3 PARTITION OF employees_hash
+FOR VALUES WITH(MODULUS 3 , REMAINDER 2);
+
+
+--View all partition and master data
+
+Select * from employees_hash
+
+Select * from employees_hash_1
+
+Select * from employees_hash_2
+
+Select * from employees_hash_3
+
+--Insert Into Master
+
+INSERT INTO employees_hash(id,birth_date,country_code) VALUES
+(1,'2000-01-01','US'),
+(2,'2000-01-02','US'),
+(3,'2000-12-31','UK');
+
+
+--Update Operations
+-------------------------
+
+UPDATE employees_hash set country_code = 'US' Where id = 3
+
+Select * from employees_hash
+
+Select * from employees_hash_1
+
+Select * from employees_hash_2
+
+Select * from employees_hash_3
+
+--Delete Operations
+
+DELETE FROM employees_hash where id = 2
+
+
+--Now Let's visualize the Query
+--------------------------------
+
+Select * from employees_hash
+
+--In this above query we didn't specified the WHERE Condition so it will Scan all the partition to get the data 
+-- so it will be same as un-partitions table
+
+Select * from employees_hash
+WHERE id = 1
+
+--In the above Query it will directly go to the respective partitions to get data based on id
+
+
+--DEFAULT PARTITONS ------
+--###########################
+
+--ANything which doesn't contains in other partitions then it will go into default partitions
+
+--What happen when will try to insert a record that can't fit into any partitions ?
+
+--Let's Insert.......
+
+Insert into employees_list(id,birth_date,country_code) values
+(10,'2000-01-01','JP')
+
+--ERROR:  no partition of relation "employees_list" found for row
+--Partition key of the failing row contains (country_code) = (JP). This is where dafult we have to CREATE
+
+--SYNTAX To CREATE Default Partition
+
+CREATE TABLE partition_name PARTITION OF master_table_name DEFAULT;
+
+CREATE TABLE employees_list_default PARTITION OF employees_list DEFAULT;
+
+SELECT * FROM employees_list_default;
+
+
+
+-----Multi-Level Partitioning OR SUB-Partitioning
+--#######################################################
+
+/*
+
+Sub-Partitioning :- It Meas Partition of Partitions..
+
+A Single partition can also be a partitioned table..
+
+Caution :-
+
+	master_table 
+	  partition1
+	    partition1.1
+	    partition1.2
+		............
+	  partition2
+	  
+ When will create multi-level partition specially on ranges. it is easy to create large number of
+ sub-partitions some containing little or no data..
+
+ This can add many entries to system tables, which increase the time and memory required to optimize and execute queries
+ In Such cases try to increase the range interval or choose as diffrent partitioning strategy to reduce the number of sub-partitioning cReated
+
+ Sub Partition naming conventions played a vital role so, plan the naming convention.
+
+*/
+
+--Let's Create a table
+
+CREATE TABLE employees_master(
+ id bigserial,
+ birth_date DATE not null,
+ country_code VARCHAr(6) NOT NULL
+)PARTITION BY LIST(country_code)
+
+
+---Create partition and sub-partition
+--#####################################
+
+--1st Create Main Partition
+--##############################
+
+--Partion By US
+           -- EU
+	   --   --hash
+ -- NOTE :- List Partion by country code US and EU and in EU further partion by Hash
+ 
+CREATE TABLE employees_master_us PARTITION OF employees_master
+FOR VALUES IN('US');
+
+ 
+CREATE TABLE employees_master_eu PARTITION OF employees_master
+FOR VALUES IN('UK','DE','IT','FR','ES')
+PARTITION BY HASH(id);  
+
+--Create Sub-Partition
+
+CREATE TABLE employees_master_eu_1 PARTITION OF employees_master_eu
+FOR VALUES WITH(MODULUS 3, REMAINDER 0);
+
+CREATE TABLE employees_master_eu_2 PARTITION OF employees_master_eu
+FOR VALUES WITH(MODULUS 3, REMAINDER 1);
+
+CREATE TABLE employees_master_eu_3 PARTITION OF employees_master_eu
+FOR VALUES WITH(MODULUS 3, REMAINDER 2);
+
+
+--Lets Insert DATA.....
+
+INSERT INTO employees_master(id,birth_date,country_code) VALUES
+(1,'2000-01-01','US'),
+(2,'2000-01-02','US'),
+(3,'2000-12-31','UK'),
+(4,'2001-01-01','DE');
+
+--Get all
+
+SELECT * FROM employees_master;
+
+select * from employees_master_us
+
+SELECT * FROM employees_master_eu
+
+select * FROM employees_master_eu_1
+
+select * FROM employees_master_eu_2
+
+select * FROM employees_master_eu_3
+
+
+----Partition Maintainance----
+--#####################################
+
+--1. Attach a new Partition---------
+--##################################
+
+--Example :- We have to add new partition to ouer existing master for new country_code SP(Singapore).
+
+CREATE TABLE employees_list_sp PARTITION OF employees_list
+FOR VALUES IN('SP');
+
+--add data
+
+iNSERT INTO employees_list(id,birth_date,country_code) VALUES
+(10,'2000-09-09','SP')
+
+select * from employees_list
+
+select * from employees_list_sp
+
+
+--Dettach a partitions
+
+--SYNTAX :-
+
+ALTER TABLE table_name DETACH PARTITION partition_name;
+
+ALTER TABLE employees_list DETACH PARTITION employees_list_sp
+
+
+--ALTERING The Bound Of Partition----------
+--###############################################
+
+--Create master table
+
+CREATE TABLE t1(
+ a int,
+ b int
+)PARTITION BY RANGE(a);
+
+--Range Will be
+-- 0 - 100
+-- 100 - 200
+-- 200 - 300
+
+--Create 3 partition
+
+CREATE TABLE t1_p1 PARTITION OF t1
+FOR VALUES FROM(0) to (100);
+
+CREATE TABLE t1_p2 PARTITION OF t1
+FOR VALUES FROM(200) to (300);
+
+-- CREATE TABLE t1_p3 PARTITION OF t1
+-- FOR VALUES FROM(0) to (100);
+
+--Insert Data----
+
+INSERT INTO t1 (a,b) VALUES (150,150)
+
+SELECT * FROM t1
+
+SELECT * from t1_p1
+
+--Change the range
+--1st Detach and 2nd alter and attach
+
+rollbac
+
+--When We want to change the boundry of partition the detach attach
+BEGIN TRANSACTION;
+ALter table t1 detach partition t1_p1;
+Alter table t1 Attach partition t1_p1 for values from  (0) to (200);
+COMMIT TRANSACTION;
+
+
+
+

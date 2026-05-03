@@ -5070,5 +5070,103 @@ Alter table t1 Attach partition t1_p1 for values from  (0) to (200);
 COMMIT TRANSACTION;
 
 
+---Partition Indexing----------
+--################################
+
+/*
+Good :- 
+
+Creating index on master/parent table will automatically create same Indexes to every attched partitions
+
+Little Bad :-
+
+PostgreSQL does not allow to create a SINGLE INDEX covering evry partitions of the parent tables
+We have to create index for each and every partitions
+
+Primary Key or any other unique index must include the columns used on partition by statement
+*/
+
+--Lets Create and index on employee-list(mastr table) with parent key id only..
+
+CREATE UNIQUE INDEX idx_unique_employees_list_id ON employees_list(id);
+
+--It will create index on all partitions
+
+CREATE UNIQUE INDEX idx_unique_employees_list_id_country_code ON employees_list(id,country_code);
+
+--Drop Index it will also delete from all partitions
+
+Drop Index idx_unique_employees_list_id_country_code
+
+
+----Switching partition pruning ON/OFF
+--##############################################
+
+--See the current Value  of pruning
+------------------------------------
+
+Show enable_partition_pruning;
+
+--Lets visualize the query by f7
+
+Select * from employees_list where country_code ='US';
+
+--When partition_pruning is On then partition key is used to identify which partition the query should scan
+
+--to disable pruning as off
+
+SET enable_partition_pruning = ON;
+
+--NOTE :- If enable_partition_pruning = ON then it will scan the query directly to related partition.
+--But, if it is OFF then it will scan all the partitions.
+
+
+
+
+
+-----Transaction In PostgreSQL-----------------
+--######################################################
+
+/*
+
+Our database is most vulnerable to damages while we or someone else is CHANGING IT.
+
+If a software or hardware failure will occurs while the changes is in progress a database may be left in an 
+inderminant state.
+
+A transaction is a list of command that we want to run on oumr database to make changes on information.
+
+A transaction bundles multiple steps or operations into a single ALL-OR-NOTHING operation.
+
+SQL protect our database by restricting operations that can change it so they can occur only WITHIN TRANSACTION.
+
+There are four main transaction command that protect from hard. both accidental and intentional.
+
+	COMMIT
+	ROLLBACK
+	GRANT
+	REVOKE
+
+
+----How SQL protect our database during transaction...
+--########################################################
+
+During a transaction SQL record every operation perform on data and record it into log file.
+
+If anything intrupts the transaction before Commit so statement end the transaction so we can restrore the system 
+to its original state by issuing the ROLLBACK statement.
+
+Ex :-
+	Begin
+	 Insert
+	 Update
+	 --Crash
+	commit
+	ROLLBACK;
+	
+The ROLLBACK processes the transaction log into REVERSE undoing all the actions that took placein the transaction.
+
+
+*/
 
 
